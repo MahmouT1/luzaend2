@@ -51,6 +51,11 @@ const productSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    pointsCash: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
 
     // Scheduled Release Feature
     isScheduled: {
@@ -142,7 +147,7 @@ productSchema.pre(
   ["findOneAndUpdate", "updateOne", "updateMany"],
   function (next) {
     const update = this.getUpdate();
-
+    
     if (update.info && Array.isArray(update.info)) {
       update.info = update.info.map((item) => ({
         ...item,
@@ -157,7 +162,7 @@ productSchema.pre(
     if (update.isScheduled && update.releaseDate) {
       update.isReleased = new Date() >= new Date(update.releaseDate);
     } else if (update.isScheduled === false) {
-      update.isReleased = true;
+        update.isReleased = true;
     }
 
     next();

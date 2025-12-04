@@ -1,192 +1,188 @@
 "use client";
-import toast from "react-hot-toast";
-import { useEffect, useState } from "react";
+
+import { useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
-import { ArrowLeft, Eye, EyeOff, Mail, Lock, Shield, Sparkles } from "lucide-react";
-import { simpleLogin } from "../../utils/simpleLogin";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
-import { useDispatch } from "react-redux";
-import { userLoggedIn } from "../../redux/features/auth/authSlice";
+import { FaApple } from "react-icons/fa";
+import { signIn } from "next-auth/react";
+import { toast } from 'react-hot-toast';
+import { Eye, EyeOff } from "lucide-react";
+import { useLoginMutation } from "@/redux/features/auth/authApi";
 
-export default function LoginPage() {
+type FormData = {
+  email: string;
+  password: string;
+};
+
+function LoginForm() {
   const router = useRouter();
-  const dispatch = useDispatch();
+  const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [login] = useLoginMutation();
+  
+  // Get redirect URL from query params (from checkout)
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
-    reset,
-  } = useForm();
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const fieldErrors = errors as any;
+    formState: { errors },
+  } = useForm<FormData>({
+    defaultValues: {
+      email: "",
+      password: ""
+    }
+  });
 
-  const onSubmit = async ({ email, password }) => {
+  const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
-      console.log("🔐 Attempting login with:", { email, password });
-      
-      const loginResult = await simpleLogin(email, password);
-      
-      if (loginResult.success) {
+      // Use the login API directly instead of NextAuth credentials
+      const result = await login({
+        email: data.email,
+        password: data.password,
+      }).unwrap();
+
+      if (result && result.user) {
         toast.success("Login successful!");
-        reset();
-        
-        // Update Redux store
-        dispatch(userLoggedIn({
-          user: loginResult.user,
-        }));
-        
-        // Redirect to home page
-        router.push("/");
-      } else {
-        toast.error(`Login failed: ${loginResult.error}`);
+        // Redirect to callback URL (checkout) or home
+        router.push(callbackUrl);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
-      toast.error(`Login failed: ${error.message}`);
+      const errorMessage = error?.data?.message || error?.message || 'Invalid email or password';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl: "/" });
+  const handleGoogleSignIn = async () => {
+    try {
+      const result = await signIn("google", { callbackUrl: "/" });
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        router.push('/');
+      }
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      toast.error(error instanceof Error ? error.message : 'Invalid email or password');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, rgba(147, 51, 234, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(236, 72, 153, 0.1) 0%, transparent 50%)`
-        }}></div>
-      </div>
-
-      {/* Floating Elements */}
-      <div className="absolute top-20 left-20 w-20 h-20 bg-purple-500/20 rounded-full blur-xl animate-pulse"></div>
-      <div className="absolute bottom-20 right-20 w-32 h-32 bg-pink-500/20 rounded-full blur-xl animate-pulse delay-1000"></div>
-      <div className="absolute top-1/2 left-10 w-16 h-16 bg-blue-500/20 rounded-full blur-xl animate-pulse delay-500"></div>
-
-      <div className="relative z-10 w-full max-w-md">
-        {/* Back to Home Link */}
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="inline-flex items-center text-white/70 hover:text-white transition-colors group"
-          >
-            <ArrowLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform" />
-            Back to Home
-          </Link>
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Log in</h1>
+          <p className="text-gray-600">Welcome back! Please enter your details.</p>
         </div>
 
-        {/* Main Card */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/20">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mb-4">
-              <Shield className="w-8 h-8 text-white" />
+        <div className="space-y-6">
+          <button
+            onClick={handleGoogleSignIn}
+            className="w-full flex items-center justify-center gap-3 bg-white text-gray-900 py-3 px-4 rounded-lg font-medium border border-gray-200 hover:bg-gray-50 transition-colors"
+          >
+            <FcGoogle className="w-5 h-5" />
+            <span>Continue with Google</span>
+          </button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              Welcome Back
-            </h1>
-            <p className="text-white/70">
-              Sign in to your account to continue
-            </p>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-3 bg-white text-gray-500">or</span>
+            </div>
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Email Field */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
-              <label className="block text-white/80 text-sm font-medium mb-2">
-                Email Address
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-5 h-5" />
-                <input
-                  {...register("email", { required: "Email is required" })}
-                  type="email"
-                  className="w-full bg-white/10 border border-white/20 rounded-lg pl-12 pr-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Enter your email"
-                />
-              </div>
-              {fieldErrors.email && (
-                <p className="text-red-400 text-sm mt-1">{fieldErrors.email.message}</p>
+              <input
+                id="email"
+                type="email"
+                {...register("email", { required: "Email is required" })}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Enter your email"
+              />
+              {errors?.email && (
+                <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
               )}
             </div>
 
-            {/* Password Field */}
             <div>
-              <label className="block text-white/80 text-sm font-medium mb-2">
-                Password
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <Link href="/forgot-password" className="text-sm font-medium text-purple-600 hover:text-purple-500 transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-5 h-5" />
                 <input
-                  {...register("password", { required: "Password is required" })}
+                  id="password"
                   type={showPassword ? "text" : "password"}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg pl-12 pr-12 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Enter your password"
+                  {...register("password", { required: "Password is required" })}
+                  className="w-full px-4 py-3 pr-10 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              {fieldErrors.password && (
-                <p className="text-red-400 text-sm mt-1">{fieldErrors.password.message}</p>
+              {errors?.password && (
+                <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
               )}
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:transform-none disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Signing In..." : "Sign In"}
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/20"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-transparent text-white/50">Or continue with</span>
-            </div>
-          </div>
-
-          {/* Google Sign In Button */}
-          <button
-            onClick={handleGoogleSignIn}
-            className="w-full bg-white hover:bg-gray-50 text-gray-900 font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
-          >
-            <FcGoogle size={24} />
-            <span className="ml-3">Continue with Google</span>
-          </button>
-
-          {/* Footer */}
-          <div className="mt-8 text-center">
-            <p className="text-white/50 text-sm">
-              By signing in, you agree to our Terms of Service and Privacy Policy
-            </p>
+          <div className="text-center text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link href="/register" className="font-medium text-purple-600 hover:text-purple-500 transition-colors">
+              Sign up
+            </Link>
           </div>
         </div>
-
-        {/* Decorative Elements */}
-        <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-60 animate-pulse"></div>
-        <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-60 animate-pulse delay-1000"></div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-gray-800"></div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

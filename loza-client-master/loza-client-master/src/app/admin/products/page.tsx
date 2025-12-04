@@ -54,8 +54,9 @@ export default function SiteProductsPage() {
         await deleteProductMutation(productId).unwrap();
         toast.success("Product deleted successfully");
         refetchProduct(); // Refresh the products list
-      } catch (error) {
-        toast.error("Failed to delete product");
+      } catch (error: any) {
+        const errorMessage = error?.data?.message || error?.message || "Failed to delete product";
+        toast.error(errorMessage);
         console.error("Delete product error:", error);
       }
     }

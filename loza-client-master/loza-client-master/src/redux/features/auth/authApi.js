@@ -1,6 +1,7 @@
 import { signOut } from "next-auth/react";
 import { apiSlice } from "../api/apiSlice";
 import { userLoggedIn, userLoggedOut } from "./authSlice";
+import { setUserId, clearUserId } from "../cart/cartSlice";
 import toast from "react-hot-toast";
 
 export const authApi = apiSlice.injectEndpoints({
@@ -21,6 +22,11 @@ export const authApi = apiSlice.injectEndpoints({
               user: result.data.user,
             })
           );
+          
+          // Update cart with user ID
+          if (result.data.user?._id) {
+            dispatch(setUserId(result.data.user._id));
+          }
         } catch (error) {
           console.log(error.message);
         }
@@ -35,7 +41,7 @@ export const authApi = apiSlice.injectEndpoints({
         body: data,
         credentials: "include",
       }),
-      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+      async onQueryStarted(arg, { queryFulfilled, dispatch, getState }) {
         try {
           const result = await queryFulfilled;
           console.log("🔐 Login response:", result.data);
@@ -49,6 +55,11 @@ export const authApi = apiSlice.injectEndpoints({
               user: result.data.user,
             })
           );
+          
+          // Update cart with user ID
+          if (result.data.user?._id) {
+            dispatch(setUserId(result.data.user._id));
+          }
           
           // Prevent loadUser from overriding this data for a short time
           setTimeout(() => {
@@ -84,6 +95,12 @@ export const authApi = apiSlice.injectEndpoints({
               user: result.data.user,
             })
           );
+          
+          // Update cart with user ID
+          if (result.data.user?._id) {
+            dispatch(setUserId(result.data.user._id));
+          }
+          
           localStorage.setItem("googleUserSynced", "true");
           toast.success("Logged In");
         } catch (error) {
@@ -103,6 +120,9 @@ export const authApi = apiSlice.injectEndpoints({
       async onQueryStarted(arg, { dispatch }) {
         try {
           dispatch(userLoggedOut());
+          
+          // Clear cart user ID on logout
+          dispatch(clearUserId());
         } catch (error) {}
       },
     }),

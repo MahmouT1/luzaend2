@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { userLoggedOut } from "@/redux/features/auth/authSlice";
 
 interface ProtectedProps {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ interface ProtectedProps {
 
 export default function AdminProtected({ children }: ProtectedProps) {
   const { user } = useSelector((state: any) => state.auth);
+  const dispatch = useDispatch();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -20,13 +22,22 @@ export default function AdminProtected({ children }: ProtectedProps) {
   useEffect(() => {
     if (!mounted) return;
 
-    // Simple client-side check for now
+    // If user exists but is not admin, clear their session
+    // This ensures customer login doesn't interfere with admin access
+    if (user && user.role !== 'admin') {
+      console.log("🔐 User logged in but not admin - clearing customer session");
+      dispatch(userLoggedOut());
+      localStorage.removeItem("googleUserSynced");
+      localStorage.removeItem("userData");
+    }
+
+    // Security check - redirect to admin login if not admin
     if (!user || user.role !== "admin") {
       console.log("🔐 Access denied - user is not admin or not logged in");
-      router.push('/');
+      router.replace('/admin-panel/login');
       return;
     }
-  }, [user, router, mounted]);
+  }, [user, router, mounted, dispatch]);
 
   // Don't render anything until mounted to prevent hydration mismatch
   if (!mounted) {
@@ -42,10 +53,10 @@ export default function AdminProtected({ children }: ProtectedProps) {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
           <p className="text-gray-600 mb-4">You need admin privileges to access this page.</p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/admin-panel/login')}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
-            Go to Home
+            Go to Admin Login
           </button>
         </div>
       </div>

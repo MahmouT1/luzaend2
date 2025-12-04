@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { User2, Package, Coins, ShoppingBag, Loader2 } from "lucide-react";
+import { User2, Coins, Loader2 } from "lucide-react";
 import { useGetUserProfileQuery } from "@/redux/features/auth/authApi";
 import { userLoggedIn } from "@/redux/features/auth/authSlice";
 
@@ -105,39 +105,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Purchases Card */}
-          <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-6 md:col-span-2">
-            <div className="flex items-center space-x-3 mb-6">
-              <ShoppingBag size={24} className="text-blue-500" />
-              <h2 className="text-xl font-semibold text-gray-900">Purchase History</h2>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <Package size={32} className="text-blue-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-blue-600">{displayUser?.purchasedProductsCount || 0}</div>
-                <p className="text-sm text-gray-600">Total Purchases</p>
-              </div>
-              
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <ShoppingBag size={32} className="text-green-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-green-600">{displayUser?.totalPurchases || 0}</div>
-                <p className="text-sm text-gray-600">Orders Completed</p>
-              </div>
-              
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <Coins size={32} className="text-purple-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-purple-600">${(displayUser?.points || 0) * 0.1}</div>
-                <p className="text-sm text-gray-600">Points Value</p>
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                View Order History
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

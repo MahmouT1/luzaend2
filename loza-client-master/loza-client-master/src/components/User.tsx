@@ -1,5 +1,6 @@
 "use client";
-import { User2, ChevronDown, Package, Coins, LogOut, Loader2 } from "lucide-react";
+import { UserIcon, ChevronDownIcon, PackageIcon, CoinsIcon, LogOutIcon } from "./icons/SimpleIcons";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -10,7 +11,7 @@ import {
   useLogOutMutation
 } from "@/redux/features/auth/authApi";
 import toast from "react-hot-toast";
-import { redirect } from "next/navigation";
+import LoginModal from "./LoginModal";
 
 const User = () => {
   const { user } = useSelector((state: any) => state.auth);
@@ -18,6 +19,7 @@ const User = () => {
   const [socialAuth, {}] = useSocialAuthMutation();
   const [Logout, {}] = useLogOutMutation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   
   // Prevent hydration mismatch
@@ -80,11 +82,19 @@ const User = () => {
   return (
     <div className="relative">
       {!user && (
-        <Link href={"/login"}>
-          <button className="px-6 py-4 border-slate-800 text-slate-700">
-            Login
+        <>
+          <button
+            onClick={() => setIsLoginModalOpen(true)}
+            className="flex items-center text-gray-700 hover:text-black transition-colors"
+            aria-label="Login"
+          >
+            <UserIcon size={20} />
           </button>
-        </Link>
+          <LoginModal 
+            isOpen={isLoginModalOpen} 
+            onClose={() => setIsLoginModalOpen(false)} 
+          />
+        </>
       )}
       
       {user?.role === "admin" && (
@@ -99,8 +109,8 @@ const User = () => {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center text-gray-700 hover:text-black transition-colors"
           >
-            <User2 size={20} />
-            <ChevronDown size={16} className="ml-1" />
+            <UserIcon size={20} />
+            <ChevronDownIcon size={16} className="ml-1" />
           </button>
 
           {isDropdownOpen && (
@@ -109,7 +119,7 @@ const User = () => {
               <div className="p-4 border-b border-gray-100">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <User2 size={20} className="text-gray-600" />
+                    <UserIcon size={20} className="text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">
@@ -132,7 +142,7 @@ const User = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
                       <div className="flex items-center justify-center">
-                        <Coins size={16} className="text-yellow-500 mr-1" />
+                        <CoinsIcon size={16} className="text-yellow-500 mr-1" />
                         <span className="text-sm font-medium text-gray-900">
                           {displayUser?.points || 0}
                         </span>
@@ -144,7 +154,7 @@ const User = () => {
                     </div>
                     <div className="text-center">
                       <div className="flex items-center justify-center">
-                        <Package size={16} className="text-blue-500 mr-1" />
+                        <PackageIcon size={16} className="text-blue-500 mr-1" />
                         <span className="text-sm font-medium text-gray-900">
                           {displayUser?.purchasedProductsCount || 0}
                         </span>
@@ -162,7 +172,7 @@ const User = () => {
                   onClick={() => setIsDropdownOpen(false)}
                   className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors w-full"
                 >
-                  <User2 size={16} className="mr-2" />
+                  <UserIcon size={16} className="mr-2" />
                   View Profile
                 </Link>
                 
@@ -171,7 +181,7 @@ const User = () => {
                   onClick={() => setIsDropdownOpen(false)}
                   className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors w-full"
                 >
-                  <Package size={16} className="mr-2" />
+                  <PackageIcon size={16} className="mr-2" />
                   My Purchases
                 </Link>
 
@@ -179,7 +189,7 @@ const User = () => {
                   onClick={handleLogout}
                   className="flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors w-full"
                 >
-                  <LogOut size={16} className="mr-2" />
+                  <LogOutIcon size={16} className="mr-2" />
                   Logout
                 </button>
               </div>

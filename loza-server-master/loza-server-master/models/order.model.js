@@ -77,6 +77,10 @@ const orderSchema = new mongoose.Schema(
         enum: ["paid", "unpaid"],
         required: true,
       },
+      instapayAccountName: {
+        type: String,
+        default: undefined,
+      },
     },
 
     invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: "Invoice" },

@@ -80,50 +80,55 @@ export const createOrder = async (req, res) => {
     }
 
     // Update user's points and purchased products
-    console.log("Finding user with ID:", userInfo.userId);
-    const userRecord = await User.findById(userInfo.userId);
-    if (userRecord) {
-      console.log("User found:", userRecord.email);
-      // Calculate points to earn from products
-      let pointsToEarn = 0;
-      if (req.body.pointsEarned) {
-        pointsToEarn = req.body.pointsEarned;
-      } else {
-        // Calculate points from product points if not provided
-        pointsToEarn = orderItems.reduce((sum, item) => {
-          return sum + ((item.points || 0) * item.quantity);
-        }, 0);
-      }
-
-      // Handle points based on payment method
-      if (req.body.pointsUsed && req.body.pointsUsed > 0) {
-        // Using points - deduct from account, no points earned
-        if (userRecord.points < req.body.pointsUsed) {
-          return res.status(400).json({ 
-            message: "Insufficient points. You only have " + userRecord.points + " points available." 
-          });
+      console.log("Finding user with ID:", userInfo.userId);
+      const userRecord = await User.findById(userInfo.userId);
+      if (userRecord) {
+        console.log("User found:", userRecord.email);
+        // Calculate points to earn from products
+        let pointsToEarn = 0;
+      if (req.body.pointsEarned !== undefined && req.body.pointsEarned !== null) {
+          pointsToEarn = req.body.pointsEarned;
+        } else {
+        // Fallback calculation based on paymentMethod and item.points/pointsCash
+        const paymentType = paymentMethod?.type || "";
+          pointsToEarn = orderItems.reduce((sum, item) => {
+          if (paymentType === "cash_on_delivery" && item.pointsCash !== undefined) {
+            return sum + ((item.pointsCash || 0) * item.quantity);
+          } else {
+            return sum + ((item.points || 0) * item.quantity);
+          }
+          }, 0);
         }
-        userRecord.points -= req.body.pointsUsed;
-        console.log(`Deducted ${req.body.pointsUsed} points from user ${userRecord.email}`);
-      } else {
-        // Not using points - earn points from products
-        userRecord.points += pointsToEarn;
-        console.log(`Added ${pointsToEarn} points to user ${userRecord.email}`);
-      }
 
-      // Add purchased products
-      orderItems.forEach(item => {
-        userRecord.purchasedProducts.push({
-          productId: item.id || item._id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          purchasedAt: new Date()
+        // Handle points based on payment method
+        if (req.body.pointsUsed && req.body.pointsUsed > 0) {
+          // Using points - deduct from account, no points earned
+          if (userRecord.points < req.body.pointsUsed) {
+            return res.status(400).json({ 
+              message: "Insufficient points. You only have " + userRecord.points + " points available." 
+            });
+          }
+          userRecord.points -= req.body.pointsUsed;
+          console.log(`Deducted ${req.body.pointsUsed} points from user ${userRecord.email}`);
+        } else {
+          // Not using points - earn points from products
+          userRecord.points += pointsToEarn;
+          console.log(`Added ${pointsToEarn} points to user ${userRecord.email}`);
+        }
+
+        // Add purchased products
+        orderItems.forEach(item => {
+          userRecord.purchasedProducts.push({
+            productId: item.id || item._id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            purchasedAt: new Date()
+          });
         });
-      });
 
-      userRecord.totalPurchases += 1;
-      await userRecord.save();
+        userRecord.totalPurchases += 1;
+        await userRecord.save();
     }
 
     // If products were processed by quantityChecker, save them
@@ -147,9 +152,9 @@ export const createOrder = async (req, res) => {
     }
 
     // Generate Invoice PDF in memory
-    console.log("Starting PDF generation...");
-    const pdfBuffer = await new Promise((resolve, reject) => {
-      try {
+        console.log("Starting PDF generation...");
+        const pdfBuffer = await new Promise((resolve, reject) => {
+          try {
         const doc = new PDFDocument();
         const buffers = [];
         doc.on("data", buffers.push.bind(buffers));
@@ -222,38 +227,38 @@ export const createOrder = async (req, res) => {
           }
         }
 
-        doc.end();
-      } catch (pdfError) {
-        console.error("PDF generation setup error:", pdfError);
-        reject(pdfError);
-      }
-    });
+            doc.end();
+          } catch (pdfError) {
+            console.error("PDF generation setup error:", pdfError);
+            reject(pdfError);
+          }
+        });
 
     // Save Invoice to DB
-    console.log("Creating invoice for order:", order._id);
-    try {
-      const invoice = await Invoice.create({
-        orderId: order._id,
-        userId: userInfo.userId,
-        pdf: pdfBuffer,
-      });
-      console.log("Invoice created:", invoice._id);
+        console.log("Creating invoice for order:", order._id);
+        try {
+          const invoice = await Invoice.create({
+            orderId: order._id,
+            userId: userInfo.userId,
+            pdf: pdfBuffer,
+          });
+          console.log("Invoice created:", invoice._id);
 
-      // Link invoiceId to order
-      order.invoiceId = invoice._id;
-      await order.save();
-      console.log("Order updated with invoice ID");
-    } catch (invoiceError) {
-      console.error("Invoice creation error:", invoiceError);
-      // Continue without invoice if it fails
-      console.log("Continuing without invoice...");
-    }
+          // Link invoiceId to order
+          order.invoiceId = invoice._id;
+          await order.save();
+          console.log("Order updated with invoice ID");
+        } catch (invoiceError) {
+          console.error("Invoice creation error:", invoiceError);
+          // Continue without invoice if it fails
+          console.log("Continuing without invoice...");
+        }
 
     // Track recent purchases for each product
-    try {
-      const { Product } = await import("../models/product.model.js");
-      
-      console.log("Starting recent purchases tracking...");
+        try {
+          const { Product } = await import("../models/product.model.js");
+          
+          console.log("Starting recent purchases tracking...");
       console.log("Order items:", orderItems);
       console.log("User info:", userInfo);
       
@@ -265,21 +270,21 @@ export const createOrder = async (req, res) => {
         if (item.productId && userInfo.nickname) {
           console.log("Adding purchase to product:", item.productId);
           
-          // Get address from shipping address
-          const address = req.body.shippingAddress ? 
-            `${req.body.shippingAddress.address || ''}, ${req.body.shippingAddress.city || ''}, ${req.body.shippingAddress.governorate || ''}`.trim().replace(/^,\s*|,\s*$/g, '') :
-            'Address not provided';
-          
-          const purchaseData = {
-            nickname: userInfo.nickname,
-            size: item.size || "One Size",
-            quantity: item.quantity,
-            purchaseDate: new Date(),
-            orderId: order._id,
-            orderNumber: order.orderNumber,
-            address: address
-          };
-          
+                // Get address from shipping address
+                const address = req.body.shippingAddress ? 
+                  `${req.body.shippingAddress.address || ''}, ${req.body.shippingAddress.city || ''}, ${req.body.shippingAddress.governorate || ''}`.trim().replace(/^,\s*|,\s*$/g, '') :
+                  'Address not provided';
+                
+                const purchaseData = {
+                  nickname: userInfo.nickname,
+                  size: item.size || "One Size",
+                  quantity: item.quantity,
+                  purchaseDate: new Date(),
+                  orderId: order._id,
+                  orderNumber: order.orderNumber,
+                  address: address
+                };
+                
           console.log("Purchase data:", purchaseData);
           
           const updatedProduct = await Product.findByIdAndUpdate(
@@ -295,28 +300,28 @@ export const createOrder = async (req, res) => {
           console.log("Product updated:", updatedProduct ? "Success" : "Failed");
           
           // Keep only the last 20 purchases per product to avoid bloating
-          await Product.findByIdAndUpdate(
-            item.productId,
-            {
-              $push: {
-                recentPurchases: {
+                await Product.findByIdAndUpdate(
+                  item.productId,
+                  {
+                    $push: {
+                      recentPurchases: {
                   $each: [],
-                  $slice: -20
-                }
-              }
-            }
-          );
-          
-          console.log("Purchase tracking completed for product:", item.productId);
+                        $slice: -20
+                      }
+                    }
+                  }
+                );
+                
+                console.log("Purchase tracking completed for product:", item.productId);
         } else {
           console.log("Skipping item - missing productId or nickname");
         }
-      }
-      console.log("Recent purchases tracked successfully");
-    } catch (trackingError) {
-      console.error("Error tracking recent purchases:", trackingError);
+              }
+          console.log("Recent purchases tracked successfully");
+        } catch (trackingError) {
+          console.error("Error tracking recent purchases:", trackingError);
       // Don't fail the order if tracking fails
-    }
+        }
 
     // Send order confirmation email
     try {
@@ -326,8 +331,8 @@ export const createOrder = async (req, res) => {
         console.log("✅ Order confirmation email sent successfully");
       } else {
         console.log("⚠️ Failed to send order confirmation email:", emailResult.message);
-      }
-    } catch (emailError) {
+          }
+        } catch (emailError) {
       console.error("❌ Error sending order confirmation email:", emailError);
       // Don't fail the order if email fails
     }

@@ -143,7 +143,7 @@ export const categoryProducts = {
       images: ['https://images.unsplash.com/photo-1601370552761-d851c5c3a990?w=800'],
       sizes: ['One Size'],
       colors: ['Floral', 'Geometric', 'Abstract'],
-      description: 'Elegant silk scarf with exclusive Loza prints.',
+      description: 'Elegant silk scarf with exclusive Luza prints.',
       inStock: true,
     },
     {

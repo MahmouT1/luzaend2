@@ -54,8 +54,8 @@ export default function AdminLayout({
       localStorage.removeItem("googleUserSynced");
       localStorage.removeItem("userData");
       
-      // Sign out from NextAuth
-      await signOut({ callbackUrl: '/' });
+      // Sign out from NextAuth - redirect to admin login
+      await signOut({ callbackUrl: '/admin-panel/login' });
       
     } catch (error) {
       console.error("Admin logout error:", error);
@@ -71,14 +71,14 @@ export default function AdminLayout({
   useEffect(() => {
     if (LogoutSuccess) {
       toast.success("logged out");
-      router.push("/");
+      router.push("/admin-panel/login");
     }
   }, [LogoutSuccess, router]);
 
-  // Additional security check - redirect if not admin
+  // Additional security check - redirect to new admin panel login
   useEffect(() => {
     if (mounted && (!user || user.role !== 'admin')) {
-      router.push('/');
+      router.push('/admin-panel/login');
     }
   }, [mounted, user, router]);
 
@@ -96,52 +96,91 @@ export default function AdminLayout({
 
   return (
     <AdminProtected>
-      <div className="min-h-screen bg-gray-50">
-        {/* Sidebar */}
-        <div className="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0">
-          <div className="flex items-center justify-between h-16 px-4 bg-gray-800">
+      <div className="min-h-screen bg-gray-50 flex">
+        {/* Sidebar - Full Height */}
+        <div className="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-gray-900 to-gray-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 shadow-2xl">
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between h-20 px-6 bg-gray-800 border-b border-gray-700">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                <HomeIcon className="w-6 h-6 text-white" />
+              </div>
             <h1 className="text-xl font-bold text-white">Admin Panel</h1>
+            </div>
             <button
-              className="lg:hidden text-gray-400 hover:text-white"
+              className="lg:hidden text-gray-400 hover:text-white transition-colors"
               onClick={() => setSidebarOpen(false)}
             >
               <XIcon className="w-6 h-6" />
             </button>
           </div>
 
-          <nav className="mt-5 px-2">
-            <div className="space-y-1">
-              {navigation.map((item) => (
+          {/* Navigation */}
+          <nav className="flex-1 px-4 py-6 overflow-y-auto">
+            <div className="space-y-2">
+              {navigation.map((item) => {
+                const isActive = pathname === item.href;
+                return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-                    pathname === item.href
-                      ? "bg-purple-600 text-white"
+                    className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/50"
                       : "text-gray-300 hover:bg-gray-700 hover:text-white"
                   }`}
                 >
                   <item.icon
-                    className={`mr-3 h-5 w-5 ${
-                      pathname === item.href ? "text-white" : "text-gray-400"
-                    }`}
+                      className={`mr-3 h-5 w-5 transition-transform duration-200 ${
+                        isActive ? "text-white" : "text-gray-400 group-hover:text-white"
+                      } ${isActive ? "scale-110" : "group-hover:scale-110"}`}
                   />
-                  {item.name}
+                    <span className="flex-1">{item.name}</span>
+                    {isActive && (
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    )}
                 </Link>
-              ))}
-              <div
-                className="group cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 "
-                onClick={handleLogout}
-              >
-                <LogOut className="text-white mr-3 h-5 w-5" />
-                Logout
-              </div>
+                );
+              })}
             </div>
           </nav>
+
+          {/* Logout Button */}
+          <div className="px-4 py-4 border-t border-gray-700">
+              <div
+              className="group cursor-pointer text-gray-300 hover:bg-red-600 hover:text-white flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200"
+                onClick={handleLogout}
+              >
+              <LogOut className="mr-3 h-5 w-5 group-hover:rotate-12 transition-transform duration-200" />
+              <span>Logout</span>
+            </div>
+          </div>
+
+          {/* User Info */}
+          {user && (
+            <div className="px-4 py-4 border-t border-gray-700">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">
+                    {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'A'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">
+                    {user.name || 'Admin'}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="lg:ml-64">
-          <div className="p-6">{children}</div>
+        {/* Main Content */}
+        <div className="flex-1 lg:ml-0">
+          <div className="min-h-screen">{children}</div>
         </div>
       </div>
     </AdminProtected>

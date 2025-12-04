@@ -9,7 +9,7 @@ export const orderApi = apiSlice.injectEndpoints({
         body: data,
         credentials: "include"
       }),
-      invalidatesTags: ['Order']
+      invalidatesTags: ['Order', 'Product'] // Invalidate all products to refresh stock status
     }),
     getAllOrders: builder.query({
       query: () => ({
@@ -47,6 +47,13 @@ export const orderApi = apiSlice.injectEndpoints({
         credentials: "include",
         responseType: 'blob'
       })
+    }),
+    getUserOrders: builder.query({
+      query: () => ({
+        url: "/orders/get-user-orders",
+        method: "GET",
+        credentials: "include"
+      })
     })
   })
 });
@@ -57,5 +64,6 @@ export const {
   useUpdateOrderStatusMutation,
   useGetSingleOrderQuery,
   useDeleteOrderMutation,
-  useGetInvoiceQuery
+  useGetInvoiceQuery,
+  useGetUserOrdersQuery
 } = orderApi;

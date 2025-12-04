@@ -21,11 +21,6 @@ export function ProductCard({ product }: ProductCardProps) {
               className="w-full h-full object-center object-cover group-hover:scale-105 transition-transform duration-300"
             />
           </div>
-          {product.originalPrice && (
-            <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 text-xs font-medium rounded">
-              SALE
-            </div>
-          )}
           {product.featured && (
             <div className="absolute top-2 right-2 bg-black text-white px-2 py-1 text-xs font-medium rounded">
               FEATURED

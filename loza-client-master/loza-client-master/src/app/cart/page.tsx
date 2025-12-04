@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, X } from "lucide-react";
@@ -11,11 +11,14 @@ import {
   removeFromCart,
 } from "@/redux/features/cart/cartSlice";
 import { formatPrice } from "@/lib/utils";
+import PointsReminderModal from "@/components/PointsReminderModal";
 
 export default function CartPage() {
   const { cartItems } = useSelector((state: any) => state.cart);
+  const { user } = useSelector((state: any) => state.auth);
   const dispatch = useDispatch();
   const [mounted, setMounted] = React.useState(false);
+  const [showPointsModal, setShowPointsModal] = useState(false);
 
   // Prevent hydration mismatch
   React.useEffect(() => {
@@ -71,10 +74,10 @@ export default function CartPage() {
                 <ShoppingBag className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-light text-gray-900 tracking-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-light text-gray-900 tracking-tight">
                   Shopping Cart
                 </h1>
-                <p className="text-gray-500 mt-1">
+                <p className="text-sm sm:text-base text-gray-500 mt-1">
                   {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
                 </p>
               </div>
@@ -129,10 +132,13 @@ export default function CartPage() {
                         {/* Product Image */}
                         <div className="w-full lg:w-40 h-40 relative flex-shrink-0">
                           <Image
-                            src={item.images[0].url}
+                            src={item.images?.[0]?.url || item.coverImage || '/placeholder-image.jpg'}
                             alt={item.name}
                             fill
                             className="object-cover rounded-xl shadow-sm"
+                            onError={(e) => {
+                              e.currentTarget.src = '/placeholder-image.jpg';
+                            }}
                           />
                           <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center">
                             <span className="text-xs font-medium text-gray-900">{item.quantity}</span>
@@ -259,12 +265,20 @@ export default function CartPage() {
                     </div>
                   </div>
 
-                  <Link
-                    href="/checkout"
-                    className="w-full bg-gray-900 text-white py-4 rounded-full text-center font-medium hover:bg-gray-800 transition-all duration-200 hover:scale-105 shadow-lg mb-4 block"
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        // Show points reminder modal if user is not logged in
+                        setShowPointsModal(true);
+                      } else {
+                        // Direct to checkout if user is logged in
+                        window.location.href = "/checkout";
+                      }
+                    }}
+                    className="w-full bg-gray-900 text-white py-4 rounded-full text-center font-medium hover:bg-gray-800 transition-all duration-200 hover:scale-105 shadow-lg mb-4"
                   >
                     Proceed to Checkout
-                  </Link>
+                  </button>
 
                   <Link
                     href="/categories/new-arrival"
@@ -278,6 +292,15 @@ export default function CartPage() {
           </div>
         )}
       </div>
+
+      {/* Points Reminder Modal */}
+      {!user && (
+        <PointsReminderModal
+          isOpen={showPointsModal}
+          onClose={() => setShowPointsModal(false)}
+          totalPoints={totalPoints}
+        />
+      )}
     </div>
   );
 }

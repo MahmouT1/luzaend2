@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { userLoggedIn } from "../auth/authSlice";
+import { setUserId, clearUserId } from "../cart/cartSlice";
 
 export const apiSlice = createApi({
   reducerPath: "api",
@@ -11,6 +12,7 @@ export const apiSlice = createApi({
     },
   }),
   tagTypes: ['User', 'Order', 'Product'],
+  keepUnusedDataFor: 60, // Default cache time for all endpoints
 
   endpoints: (builder) => ({
     // CHECKS IF USER IS LOGGED IN
@@ -38,9 +40,16 @@ export const apiSlice = createApi({
               user: result.data.user,
             })
           );
+          
+          // Update cart with user ID
+          if (result.data.user?._id) {
+            dispatch(setUserId(result.data.user._id));
+          }
         } catch (error) {
           console.log("🔐 LoadUser error - this is normal if not logged in:", error);
           // Don't log this as an error since it's expected when not authenticated
+          // Clear cart user ID if user is not logged in
+          dispatch(clearUserId());
         }
       },
       // Disable automatic refetching to prevent interference with login

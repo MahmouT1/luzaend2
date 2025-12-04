@@ -15,6 +15,90 @@
   animation: scroll 30s linear infinite;
 }
 
+/* Loading Logo Animation */
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fadeInOut 2s ease-in-out infinite;
+}
+
+.animate-fade-in-out-delayed {
+  animation: fadeInOut 2s ease-in-out infinite 0.3s;
+}
+
+/* Slow rotation for loading logo */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+/* Sale Badge with Chromatic Aberration Effect */
+.sale-badge {
+  position: relative;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-shadow: 
+    0 0 1px rgba(255, 255, 255, 0.8),
+    1px 0 0 rgba(0, 150, 255, 0.3),
+    -1px 0 0 rgba(255, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.sale-badge::before {
+  content: 'Sale';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  color: rgba(0, 150, 255, 0.4);
+  transform: translateX(0.5px);
+  z-index: -1;
+}
+
+.sale-badge::after {
+  content: 'Sale';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  color: rgba(255, 0, 0, 0.4);
+  transform: translateX(-0.5px);
+  z-index: -1;
+}
+
+/* Ensure promo banner is always visible */
+#animated-promo-banner {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 40 !important;
+  position: fixed !important;
+}
+
+/* Responsive top position for promo banner */
+@media (min-width: 640px) {
+  #animated-promo-banner {
+    top: 80px !important;
+  }
+}
+
 /* Simple gentle animation for advertisement banner */
 @keyframes gentle-float {
   0%, 100% {
@@ -23,6 +107,166 @@
   50% {
     transform: translateY(-5px);
   }
+}
+
+/* Cookie Banner Animation */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s ease-out;
+}
+
+/* Professional landing page animations */
+@keyframes slideInFromBottom {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromTop {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInScale {
+  0% {
+    transform: scale(1.05);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes subtlePulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-bottom {
+  animation: slideInFromBottom 1.5s ease-out forwards;
+}
+
+.animate-slide-in-top {
+  animation: slideInFromTop 1.2s ease-out forwards;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 2s ease-out forwards;
+}
+
+.animate-text-glow {
+  animation: textGlow 3s ease-in-out infinite;
+}
+
+.animate-subtle-pulse {
+  animation: subtlePulse 4s ease-in-out infinite;
+}
+
+/* Animated gradient background */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradientFlow {
+  0%, 100% {
+    transform: translateX(0) translateY(0) scale(1);
+    opacity: 1;
+  }
+  33% {
+    transform: translateX(-20px) translateY(-10px) scale(1.1);
+    opacity: 0.9;
+  }
+  66% {
+    transform: translateX(20px) translateY(10px) scale(0.95);
+    opacity: 0.85;
+  }
+}
+
+.animated-gradient-bg {
+  background: linear-gradient(
+    135deg,
+    #000000 0%,
+    #1a0a2e 25%,
+    #6a1b9a 50%,
+    #8e24aa 75%,
+    #ab47bc 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+.animated-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at top left,
+    rgba(138, 43, 226, 0.4) 0%,
+    transparent 50%
+  ),
+  radial-gradient(
+    ellipse at bottom right,
+    rgba(147, 51, 234, 0.3) 0%,
+    transparent 50%
+  );
+  animation: gradientFlow 20s ease-in-out infinite;
+}
+
+.animated-gradient-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(147, 51, 234, 0.2) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(147, 51, 234, 0.2) 75%,
+    transparent 100%
+  );
+  animation: gradientShift 10s ease-in-out infinite;
+  filter: blur(60px);
 }
 
 body {
@@ -107,4 +351,110 @@ body {
 body {
   background-color: var(--background);
   color: var(--foreground);
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Remove padding from main when home landing page is active */
+main:has(.home-landing) {
+  padding-top: 0 !important;
+  margin: 0 !important;
+}
+
+/* Remove padding from main when category page is active */
+main:has(.category-page) {
+  padding-top: 0 !important;
+}
+
+/* Custom scrollbar for thumbnail column */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Professional scroll animations */
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Smooth scroll container */
+.scroll-container {
+  scroll-snap-type: y proximity;
+}
+
+.scroll-section {
+  scroll-snap-align: start;
 }

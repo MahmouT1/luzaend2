@@ -72,7 +72,7 @@ export const products: any = [
     ],
     sizes: ["One Size"],
     description:
-      "Hand-printed silk scarves in exclusive Loza patterns. The perfect finishing touch to any outfit.",
+      "Hand-printed silk scarves in exclusive Luza patterns. The perfect finishing touch to any outfit.",
     inStock: true,
     newArrival: true,
   },

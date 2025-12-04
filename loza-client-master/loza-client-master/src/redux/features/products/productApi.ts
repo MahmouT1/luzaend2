@@ -8,6 +8,8 @@ export const productApi = apiSlice.injectEndpoints({
         method: "GET",
         credentials: "include" as const,
       }),
+      providesTags: ['Product'],
+      keepUnusedDataFor: 60, // Cache for 1 minute to ensure fresh stock data
     }),
     getSingleProduct: builder.query({
       query: (id) => ({
@@ -15,6 +17,8 @@ export const productApi = apiSlice.injectEndpoints({
         method: "GET",
         credentials: "include" as const,
       }),
+      providesTags: (result, error, id) => [{ type: 'Product', id }],
+      keepUnusedDataFor: 60, // Cache for 1 minute to ensure fresh data
     }),
     getProductsByCategory: builder.query({
       query: (name) => ({
@@ -22,6 +26,8 @@ export const productApi = apiSlice.injectEndpoints({
         method: "GET",
         credentials: "include" as const,
       }),
+      providesTags: (result, error, name) => [{ type: 'Product', id: `category-${name}` }, 'Product'],
+      keepUnusedDataFor: 60, // Cache for 1 minute to ensure fresh stock data
     }),
     createProduct: builder.mutation({
       query: (data) => ({
@@ -38,6 +44,10 @@ export const productApi = apiSlice.injectEndpoints({
         body: { data },
         credentials: "include" as const,
       }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Product', id },
+        'Product', // Invalidate all products list
+      ],
     }),
     deleteProduct: builder.mutation({
       query: (id) => ({
@@ -45,6 +55,7 @@ export const productApi = apiSlice.injectEndpoints({
         method: "DELETE",
         credentials: "include" as const,
       }),
+      invalidatesTags: ['Product'], // Invalidate products cache after deletion
     }),
     searchProducts: builder.query({
       query: (query) => ({
@@ -52,6 +63,27 @@ export const productApi = apiSlice.injectEndpoints({
         method: "GET",
         credentials: "include" as const,
       }),
+    }),
+    getBestsellingProducts: builder.query({
+      query: () => ({
+        url: "/products/get-bestsellers",
+        method: "GET",
+        credentials: "include" as const,
+      }),
+      providesTags: ['Product'],
+      keepUnusedDataFor: 300, // Cache for 5 minutes
+    }),
+    addProductRating: builder.mutation({
+      query: ({ id, rating, review, userName, userId }) => ({
+        url: `/products/add-rating/${id}`,
+        method: "POST",
+        body: { rating, review, userName, userId },
+        credentials: "include" as const,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Product', id },
+        'Product', // Invalidate all products list
+      ],
     }),
   }),
 });
@@ -64,4 +96,6 @@ export const {
   useUpdateProductMutation,
   useGetProductsByCategoryQuery,
   useSearchProductsQuery,
+  useAddProductRatingMutation,
+  useGetBestsellingProductsQuery,
 } = productApi;

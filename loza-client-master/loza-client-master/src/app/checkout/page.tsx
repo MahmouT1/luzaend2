@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { useCreateOrderMutation } from "@/redux/features/orders/orderApi";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { clearAll } from "@/redux/features/cart/cartSlice";
+import { clearAll, updateProductInCart } from "@/redux/features/cart/cartSlice";
 import { useLoadUserQuery } from "@/redux/features/api/apiSlice";
+import { useGetSingleProductQuery } from "@/redux/features/products/productApi";
 import { CreditCard, Truck, Gift, ShoppingBag, Lock, Shield, ArrowLeft } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
@@ -31,32 +32,74 @@ export default function CheckoutPage() {
   // Use loaded user data if available, fallback to Redux state
   const currentUser = userData?.user || user;
   
-  // Debug user state
-  console.log("Checkout page - User state:", currentUser);
-  console.log("Checkout page - User ID:", currentUser?._id);
-  console.log("Checkout page - User loading:", userLoading);
 
   // Calculate shipping and total
-  const shipping = 85; // Fixed delivery fee of 85 EGP
+  const shipping = 150; // Fixed delivery fee of 150 EGP
   const total = cartTotalPrice + shipping;
-
-  // Calculate total points available from products
-  const totalProductPoints = cartItems.reduce((sum: number, item: any) => {
-    return sum + (item.points || 0) * item.quantity;
-  }, 0);
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Check if user is logged in
+  // Refresh product data from API to ensure we have latest points values
+  // This runs once when component mounts and whenever cart items change
   useEffect(() => {
-    if (mounted && !user) {
-      toast.error("Please log in to continue with checkout");
-      router.push("/login");
-    }
-  }, [user, mounted, router]);
+    if (!mounted || !cartItems || cartItems.length === 0) return;
+    
+    let isMounted = true;
+    const refreshProductData = async () => {
+      for (const item of cartItems) {
+        if (!item._id || !isMounted) continue;
+        
+        try {
+          const apiUrl = `http://localhost:8000/api/products/get-single-product/${item._id}`;
+          const response = await fetch(apiUrl, {
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          
+          if (!response.ok || !isMounted) continue;
+          
+          const productData = await response.json();
+          const newPoints = Number(productData.points) || 0;
+          const newPointsCash = Number(productData.pointsCash) || 0;
+          const currentPoints = Number(item.points) || 0;
+          const currentPointsCash = Number(item.pointsCash) || 0;
+          
+          // Update if values changed
+          if (currentPoints !== newPoints || currentPointsCash !== newPointsCash) {
+            if (isMounted) {
+              dispatch(updateProductInCart({
+                productId: item._id,
+                size: item.size,
+                productData: {
+                  points: newPoints,
+                  pointsCash: newPointsCash,
+                }
+              }));
+              
+              console.log(`✅ Updated ${item.name}: points ${currentPoints}→${newPoints}, pointsCash ${currentPointsCash}→${newPointsCash}`);
+            }
+          }
+        } catch (error) {
+          console.error(`Error refreshing ${item.name}:`, error);
+        }
+      }
+    };
+    
+    // Refresh immediately on mount, then again after a short delay
+    refreshProductData();
+    const timer = setTimeout(refreshProductData, 500);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [mounted, cartItems.length, dispatch]); // Refresh when cart items count changes
+
+  // Allow checkout without login - no redirect needed
+  // Users can complete purchase as guests
 
   const [form, setForm] = useState({
     fullName: "",
@@ -69,14 +112,59 @@ export default function CheckoutPage() {
     building: "",
     unitNumber: "",
     paymentMethod: "",
-    nickname: ""
+    nickname: "",
+    instapayAccountName: ""
   });
 
-  // Points system state
+  // Points system state - only for logged-in users
   const [usePoints, setUsePoints] = useState(false);
   const [pointsToUse, setPointsToUse] = useState(0);
   const [pointsDiscount, setPointsDiscount] = useState(0);
   const [remainingAmount, setRemainingAmount] = useState(0);
+
+  // Calculate total points available from products based on payment method
+  const calculatePointsByPaymentMethod = (paymentType: string) => {
+    if (!paymentType) {
+      // Default to Instapay/Credit points if no payment method selected
+      return cartItems.reduce((sum: number, item: any) => {
+        return sum + (item.points || 0) * item.quantity;
+      }, 0);
+    }
+    
+    const isCashOnDelivery = paymentType === "Cash On Delivery" || paymentType === "cash_on_delivery";
+    
+    return cartItems.reduce((sum: number, item: any) => {
+      if (isCashOnDelivery) {
+        // Use pointsCash for cash on delivery
+        const pointsCashValue = (item.pointsCash !== undefined && item.pointsCash !== null) ? item.pointsCash : 0;
+        const calculatedPoints = pointsCashValue * (item.quantity || 1);
+        // Debug log in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Item: ${item.name}, pointsCash: ${pointsCashValue}, quantity: ${item.quantity}, calculated: ${calculatedPoints}`);
+        }
+        return sum + calculatedPoints;
+      } else {
+        // Instapay, Credit/Debit Card - use points
+        const pointsValue = (item.points !== undefined && item.points !== null) ? item.points : 0;
+        const calculatedPoints = pointsValue * (item.quantity || 1);
+        return sum + calculatedPoints;
+      }
+    }, 0);
+  };
+
+  // Calculate points based on selected payment method - use useMemo for reactivity
+  const totalProductPoints = useMemo(() => {
+    return calculatePointsByPaymentMethod(form.paymentMethod);
+  }, [form.paymentMethod, cartItems]);
+  
+  // Disable points usage if user is not logged in
+  useEffect(() => {
+    if (!currentUser?._id && usePoints) {
+      setUsePoints(false);
+      setPointsToUse(0);
+      setPointsDiscount(0);
+    }
+  }, [currentUser, usePoints]);
 
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -90,16 +178,8 @@ export default function CheckoutPage() {
       return;
     }
     
-    if (!currentUser?._id) {
-      toast.error("Please log in to continue with checkout");
-      return;
-    }
-    
-    // Additional validation to ensure user data is complete
-    if (!currentUser.name || !currentUser.email) {
-      toast.error("User account information is incomplete. Please log out and log in again.");
-      return;
-    }
+    // Allow checkout without login - guest checkout is allowed
+    // User data will be taken from form if not logged in
     
     if (!cartItems || cartItems.length === 0) {
       toast.error("Your cart is empty. Please add items before checkout.");
@@ -158,19 +238,32 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Validate Instapay account name if Instapay is selected
+    if (form.paymentMethod === "Instapay" && !form.instapayAccountName) {
+      toast.error("Please enter your Instapay Account Name to complete the order.");
+      return;
+    }
+
     // Calculate final amounts based on points usage
     const finalPointsDiscount = usePoints ? (pointsToUse * 10) : 0;
     const finalRemainingAmount = usePoints ? Math.max(0, total - finalPointsDiscount) : total;
     
+    // Build userInfo object - only include userId if user is logged in
+    const userInfoData: any = {
+      firstName: form.fullName.split(" ")[0] || "",
+      lastName: form.fullName.split(" ").slice(1).join(" ") || "N/A",
+      phone: form.phone || "",
+      email: form.email,
+      nickname: form.nickname || (currentUser?.name || form.fullName || "")
+    };
+    
+    // Only include userId if user is logged in
+    if (currentUser?._id) {
+      userInfoData.userId = currentUser._id;
+    }
+    
     const orderData = {
-      userInfo: {
-        firstName: form.fullName.split(" ")[0] || "",
-        lastName: form.fullName.split(" ").slice(1).join(" ") || "N/A",
-        phone: form.phone || "",
-        email: form.email,
-        userId: currentUser?._id,
-        nickname: form.nickname || ""
-      },
+      userInfo: userInfoData,
       shippingAddress: {
         address: form.address,
         city: form.city,
@@ -179,36 +272,44 @@ export default function CheckoutPage() {
         building: form.building,
         unitNumber: form.unitNumber
       },
-      orderItems: cartItems.map((item: any) => ({
+      orderItems: cartItems.map((item: any) => {
+        // Determine which points to use based on payment method
+        const pointsToUse = (form.paymentMethod === "Cash On Delivery" || form.paymentMethod === "cash_on_delivery")
+          ? (item.pointsCash || 0)
+          : (item.points || 0);
+        
+        return {
         productId: item._id,
         id: item._id,
         name: item.name,
         size: item.size,
         quantity: item.quantity,
         price: item.price,
-        points: item.points || 0,
+          points: pointsToUse,
+          pointsCash: item.pointsCash || 0,
         // Include the current product info for stock validation
         info: item.info || []
-      })),
+        };
+      }),
       paymentMethod: {
         status: "unpaid",
-        type: usePoints ? "points_cash_on_delivery" : (form.paymentMethod === "Cash On Delivery" ? "cash_on_delivery" : "credit_debit_card")
+        type: usePoints ? "points_cash_on_delivery" : (form.paymentMethod === "Cash On Delivery" ? "cash_on_delivery" : form.paymentMethod === "Instapay" ? "instapay" : "credit_debit_card"),
+        instapayAccountName: form.paymentMethod === "Instapay" ? form.instapayAccountName : undefined
       },
-      totalPrice: finalRemainingAmount,
+      totalPrice: (currentUser?._id && usePoints) ? finalRemainingAmount : total,
       subtotal: cartTotalPrice,
       deliveryFee: shipping,
-      // Points system fields
-      pointsEarned: usePoints ? 0 : totalProductPoints, // No points earned when using points
-      pointsUsed: usePoints ? pointsToUse : 0,
-      pointsDiscount: finalPointsDiscount,
-      finalAmount: finalRemainingAmount
+      // Points system fields - only for logged-in users
+      // Calculate points based on payment method - use the same calculation function
+      pointsEarned: (currentUser?._id && !usePoints) 
+        ? calculatePointsByPaymentMethod(form.paymentMethod)
+        : 0, // No points for guest checkout
+      pointsUsed: (currentUser?._id && usePoints) ? pointsToUse : 0, // Can't use points if not logged in
+      pointsDiscount: (currentUser?._id && usePoints) ? finalPointsDiscount : 0,
+      finalAmount: (currentUser?._id && usePoints) ? finalRemainingAmount : total
     };
 
-    // Final validation of order data
-    if (!orderData.userInfo.userId) {
-      toast.error("User ID is missing. Please log in again.");
-      return;
-    }
+    // Final validation of order data - userId is optional for guest checkout
     
     if (!orderData.orderItems || orderData.orderItems.length === 0) {
       toast.error("No items in order. Please add items to cart.");
@@ -222,6 +323,13 @@ export default function CheckoutPage() {
 
     try {
       console.log("Submitting order with data:", orderData);
+      console.log("Points calculation:", {
+        paymentMethod: form.paymentMethod,
+        pointsEarned: orderData.pointsEarned,
+        pointsUsed: orderData.pointsUsed,
+        isLoggedIn: !!currentUser?._id,
+        usePoints: usePoints
+      });
       console.log("User ID being sent:", currentUser?._id);
       console.log("Cart items:", cartItems);
       console.log("Form data:", form);
@@ -245,7 +353,8 @@ export default function CheckoutPage() {
       }
       
       dispatch(clearAll());
-      router.push("/profile");
+      // Redirect to products page after successful order
+      router.push("/categories/new-arrival");
     } catch (error: any) {
       console.error("Order creation error:", error);
       console.error("Error type:", typeof error);
@@ -287,9 +396,9 @@ export default function CheckoutPage() {
     }
   };
 
-  // Calculate points discount and remaining amount
+  // Calculate points discount and remaining amount - only for logged-in users
   useEffect(() => {
-    if (usePoints && pointsToUse > 0) {
+    if (currentUser?._id && usePoints && pointsToUse > 0) {
       const discount = pointsToUse * 10; // 1 point = 10 EGP
       setPointsDiscount(discount);
       setRemainingAmount(Math.max(0, total - discount));
@@ -297,7 +406,16 @@ export default function CheckoutPage() {
       setPointsDiscount(0);
       setRemainingAmount(total);
     }
-  }, [usePoints, pointsToUse, total]);
+  }, [usePoints, pointsToUse, total, currentUser]);
+  
+  // Disable points usage if user is not logged in
+  useEffect(() => {
+    if (!currentUser?._id && usePoints) {
+      setUsePoints(false);
+      setPointsToUse(0);
+      setPointsDiscount(0);
+    }
+  }, [currentUser, usePoints]);
 
   useEffect(() => {
     if (error) {
@@ -330,10 +448,10 @@ export default function CheckoutPage() {
                 <ShoppingBag className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-light text-gray-900 tracking-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-light text-gray-900 tracking-tight">
                   Secure Checkout
                 </h1>
-                <p className="text-gray-500 mt-1">
+                <p className="text-sm sm:text-base text-gray-500 mt-1">
                   Complete your order with confidence
                 </p>
               </div>
@@ -354,12 +472,12 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
           {/* Checkout Form */}
           <div className="xl:col-span-2">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-              <div className="flex items-center space-x-3 mb-8">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 md:p-8 mb-8">
+              <div className="flex items-center space-x-3 mb-6 sm:mb-8">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Lock className="w-6 h-6 text-blue-600" />
+                  <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 </div>
-                <h2 className="text-2xl font-light text-gray-900">
+                <h2 className="text-xl sm:text-2xl font-light text-gray-900">
                   Personal Information
                 </h2>
               </div>
@@ -545,9 +663,6 @@ export default function CheckoutPage() {
                         />
                         <div className="ml-3">
                           <label className="font-medium text-gray-900">Credit/Debit Card</label>
-                          <p className="text-sm text-gray-600 mt-1">
-                            After completing the data and clicking on 'Complete Order' you will be taken directly to the purchase data completion page.
-                          </p>
                         </div>
                       </div>
                     </div>
@@ -563,9 +678,54 @@ export default function CheckoutPage() {
                       />
                       <div className="ml-3">
                         <label className="font-medium text-gray-900">Cash On Delivery</label>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Order Price: {cartTotalPrice.toFixed(2)} EGP | Delivery Fee: 85 EGP | Total: {total.toFixed(2)} EGP | Delivery Time: 3 to 5 days
-                        </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Instapay Button */}
+                    <div className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-all duration-200">
+                      <div className="flex items-start">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="Instapay"
+                          onChange={handleChange}
+                          className="mt-1 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div className="ml-3 flex-1">
+                          <label className="font-medium text-gray-900">Instapay</label>
+                          <p className="text-sm text-gray-600 mt-1 mb-3">
+                            Pay securely with Instapay. After completing the transfer, please fill in your Instapay account name below.
+                          </p>
+                          {form.paymentMethod === "Instapay" && (
+                            <>
+                              <a
+                                href="https://ipn.eg/S/alysherif771/instapay/6ryJFv"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium mb-4"
+                              >
+                                Proceed to Instapay Payment
+                              </a>
+                              <div className="mt-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Instapay Account Name <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  name="instapayAccountName"
+                                  value={form.instapayAccountName}
+                                  onChange={handleChange}
+                                  required={form.paymentMethod === "Instapay"}
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="Enter the account name used for Instapay transfer"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                  This field is required to complete your order with Instapay payment
+                                </p>
+                              </div>
+                            </>
+                          )}
                       </div>
                     </div>
                     </div>
@@ -573,73 +733,76 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Points Purchase Option */}
-                <div className="border-t border-gray-100 pt-8">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="p-2 bg-yellow-100 rounded-lg">
-                      <Gift className="w-6 h-6 text-yellow-600" />
-                    </div>
-                    <h3 className="text-xl font-medium text-gray-900">
-                      Loyalty Points
-                    </h3>
-                  </div>
-                  
-                  <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-r from-yellow-50 to-orange-50">
-                    <div className="flex items-start">
-                      <input
-                        type="checkbox"
-                        checked={usePoints}
-                        onChange={(e) => setUsePoints(e.target.checked)}
-                        className="mt-1 text-blue-600 focus:ring-blue-500 rounded"
-                      />
-                      <div className="ml-3">
-                        <label className="font-medium text-gray-900">Purchase with Points</label>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Use your points to get a discount on this order
-                        </p>
+                {/* Loyalty Points Section - Only for logged-in users */}
+                {currentUser?._id && (
+                  <div className="border-t border-gray-100 pt-8">
+                    <div className="flex items-center space-x-3 mb-6">
+                      <div className="p-2 bg-yellow-100 rounded-lg">
+                        <Gift className="w-6 h-6 text-yellow-600" />
                       </div>
+                      <h3 className="text-xl font-medium text-gray-900">
+                        Loyalty Points
+                      </h3>
                     </div>
                     
-                    {usePoints && (
-                      <div className="ml-6 mt-6 space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Points to Use (Max: {Math.min(user?.points || 0, total * 10)})
-                          </label>
-                          <input
-                            type="number"
-                            value={pointsToUse}
-                            onChange={(e) => setPointsToUse(Math.min(Number(e.target.value), user?.points || 0))}
-                            min="0"
-                            max={Math.min(user?.points || 0, total * 10)}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                            placeholder="Enter points to use"
-                          />
-                          <p className="text-xs text-gray-500 mt-2">
-                            Available points: {user?.points || 0} (Value: {(user?.points || 0) * 10} EGP)
+                    <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-r from-yellow-50 to-orange-50">
+                      <div className="flex items-start">
+                        <input
+                          type="checkbox"
+                          checked={usePoints}
+                          onChange={(e) => setUsePoints(e.target.checked)}
+                          className="mt-1 text-blue-600 focus:ring-blue-500 rounded"
+                        />
+                        <div className="ml-3">
+                          <label className="font-medium text-gray-900">Purchase with Points</label>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Use your points to get a discount on this order
                           </p>
                         </div>
-                        
-                        {pointsToUse > 0 && (
-                          <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-                            <div className="text-sm text-green-800">
-                              <div className="flex justify-between items-center mb-2">
-                                <span>Points Discount:</span>
-                                <span className="font-medium text-lg">-{pointsDiscount.toFixed(2)} EGP</span>
-                              </div>
-                              <div className="flex justify-between items-center mb-2">
-                                <span>Remaining Amount:</span>
-                                <span className="font-medium text-lg">{remainingAmount.toFixed(2)} EGP</span>
-                              </div>
-                              <div className="text-xs bg-green-100 p-2 rounded-lg">
-                                Remaining amount will be paid in cash on delivery
+                      </div>
+                      
+                      {usePoints && (
+                        <div className="ml-6 mt-6 space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Points to Use (Max: {Math.min(currentUser?.points || 0, total * 10)})
+                            </label>
+                            <input
+                              type="number"
+                              value={pointsToUse}
+                              onChange={(e) => setPointsToUse(Math.min(Number(e.target.value), currentUser?.points || 0))}
+                              min="0"
+                              max={Math.min(currentUser?.points || 0, total * 10)}
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                              placeholder="Enter points to use"
+                            />
+                            <p className="text-xs text-gray-500 mt-2">
+                              Available points: {currentUser?.points || 0} (Value: {(currentUser?.points || 0) * 10} EGP)
+                            </p>
+                          </div>
+                          
+                          {pointsToUse > 0 && (
+                            <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                              <div className="text-sm text-green-800">
+                                <div className="flex justify-between items-center mb-2">
+                                  <span>Points Discount:</span>
+                                  <span className="font-medium text-lg">-{pointsDiscount.toFixed(2)} EGP</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-2">
+                                  <span>Remaining Amount:</span>
+                                  <span className="font-medium text-lg">{remainingAmount.toFixed(2)} EGP</span>
+                                </div>
+                                <div className="text-xs bg-green-100 p-2 rounded-lg">
+                                  Remaining amount will be paid in cash on delivery
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <button
                   type="submit"
@@ -665,29 +828,45 @@ export default function CheckoutPage() {
           {/* Order Summary */}
           <div className="xl:col-span-1">
             <div className="sticky top-8">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 md:p-8">
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <ShoppingBag className="w-6 h-6 text-gray-600" />
+                    <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
                   </div>
-                  <h2 className="text-2xl font-light text-gray-900">
+                  <h2 className="text-xl sm:text-2xl font-light text-gray-900">
                     Order Summary
                   </h2>
                 </div>
 
                 <div className="space-y-4 mb-6">
-                  {cartItems.map((item: any, index: any) => (
+                  {cartItems.map((item: any, index: any) => {
+                    // Get image source safely
+                    const imageSrc = 
+                      (item.images && item.images[0] && (typeof item.images[0] === 'string' ? item.images[0] : item.images[0].url)) ||
+                      item.coverImage ||
+                      '/placeholder-image.jpg';
+                    
+                    return (
                     <div
                       key={index}
                       className="flex items-center py-4 border-b border-gray-100 last:border-b-0"
                     >
                       <div className="w-16 h-16 relative mr-4 flex-shrink-0">
-                        <Image
-                          src={item.images[0].url}
-                          alt={item.name}
-                          fill
-                          className="object-cover rounded-lg shadow-sm"
-                        />
+                        {imageSrc && imageSrc !== '' ? (
+                          <Image
+                            src={imageSrc}
+                            alt={item.name || 'Product'}
+                            fill
+                            className="object-cover rounded-lg shadow-sm"
+                            onError={(e) => {
+                              e.currentTarget.src = '/placeholder-image.jpg';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+                            <ShoppingBag className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
                         <div className="absolute -top-1 -right-1 w-6 h-6 bg-gray-900 text-white text-xs rounded-full flex items-center justify-center">
                           {item.quantity}
                         </div>
@@ -731,7 +910,8 @@ export default function CheckoutPage() {
                         {formatPrice(item.price * item.quantity)}
                       </p>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="space-y-3 mb-6">
@@ -746,12 +926,18 @@ export default function CheckoutPage() {
                       {shipping.toFixed(2)} EGP
                     </span>
                   </div>
+                  <div className="flex justify-between items-center py-2 border-t pt-2">
+                    <span className="text-gray-600">Delivery Time</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      5 to 6 days
+                    </span>
+                  </div>
                   <p className="text-xs text-gray-500 text-center">
                     Standard delivery fee applies to all orders
                   </p>
                   
-                  {/* Points Information */}
-                  {totalProductPoints > 0 && (
+                  {/* Points Information - Only for logged-in users */}
+                  {currentUser?._id && totalProductPoints > 0 && (
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-blue-800 font-medium">Points Available</span>
@@ -759,6 +945,32 @@ export default function CheckoutPage() {
                       </div>
                       <div className="text-xs text-blue-600">
                         Earn {totalProductPoints} points with this order
+                        {form.paymentMethod === "Cash On Delivery" && (
+                          <span className="block mt-1 text-blue-700 font-medium">
+                            (Cash on Delivery points)
+                          </span>
+                        )}
+                        {(form.paymentMethod === "Instapay" || form.paymentMethod === "Credit/Debit Card") && (
+                          <span className="block mt-1 text-blue-700 font-medium">
+                            (Instapay/Credit/Debit points)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  
+                  {/* Guest Checkout Notice */}
+                  {!currentUser?._id && totalProductPoints > 0 && (
+                    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl border border-yellow-200">
+                      <div className="flex items-start space-x-2">
+                        <Gift className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                        <div className="text-sm text-yellow-800">
+                          <p className="font-medium mb-1">Sign in to earn {totalProductPoints} points!</p>
+                          <p className="text-xs text-yellow-700">
+                            Create an account to earn points and get discounts on future orders.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -781,23 +993,13 @@ export default function CheckoutPage() {
                   {!usePoints && (
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-xl font-medium text-gray-900">Total</span>
-                        <span className="text-2xl font-light text-gray-900">{total.toFixed(2)} EGP</span>
+                        <span className="text-lg sm:text-xl font-medium text-gray-900">Total</span>
+                        <span className="text-xl sm:text-2xl font-light text-gray-900">{total.toFixed(2)} EGP</span>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Help Section */}
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Shield className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">Need Help?</span>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Call us: 035438384 | 01254486347
-                  </p>
-                </div>
               </div>
             </div>
           </div>

@@ -34,16 +34,13 @@ export default function RecentBuyersPanel({ recentPurchases, productName }: Rece
     .sort((a, b) => new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime())
     .slice(0, 5);
 
-  const formatTimeAgo = (dateString: string) => {
+  const formatPurchaseDate = (dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return "Just now";
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const getInitials = (name: string) => {
@@ -63,59 +60,53 @@ export default function RecentBuyersPanel({ recentPurchases, productName }: Rece
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-      {/* Header with Gradient Background */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden mt-8">
+      {/* Header with Black Background */}
+      <div className="bg-black px-4 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="w-2 h-2 sm:w-3 sm:h-3 bg-white rounded-full"></div>
           <div>
-            <h3 className="text-white font-semibold text-lg">LeaderBoard</h3>
+            <h3 className="text-white font-medium text-base sm:text-lg">LEADERBOARD</h3>
           </div>
         </div>
       </div>
 
       {/* Buyers List */}
-      <div className="p-6">
-        <div className="space-y-4">
+      <div className="p-4 sm:p-6">
+        <div className="space-y-3 sm:space-y-4">
           {sortedPurchases.map((purchase, index) => (
-            <div key={`${purchase.orderId}-${index}`} className="flex items-center space-x-4">
+            <div key={`${purchase.orderId}-${index}`} className="flex items-center space-x-2 sm:space-x-4">
               {/* Avatar with Purchase Order Number */}
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md">
+              <div className="relative flex-shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-full flex items-center justify-center text-white font-medium text-xs sm:text-sm">
                   {getInitials(purchase.nickname)}
                 </div>
                 {/* Purchase Order Badge */}
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md">
+                <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-black rounded-full flex items-center justify-center text-white text-[10px] sm:text-xs font-bold">
                   {index + 1}
                 </div>
               </div>
 
               {/* Buyer Info */}
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium text-gray-900">{purchase.nickname}</span>
-                  <CheckCircle className="w-4 h-4 text-blue-500" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-1 sm:space-x-2">
+                  <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{purchase.nickname}</span>
+                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
                 </div>
-                <p className="text-sm text-gray-600" title={purchase.address || 'Address not available'}>
-                  {formatAddress(purchase.address || 'Address not available')}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {formatOrderNumber(purchase.orderNumber)}
-                </p>
               </div>
 
-              {/* Time */}
-              <div className="text-right">
-                <p className="text-sm text-gray-600">{formatTimeAgo(purchase.purchaseDate)}</p>
+              {/* Purchase Date */}
+              <div className="text-right flex-shrink-0">
+                <p className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">{formatPurchaseDate(purchase.purchaseDate)}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* View All Button */}
-        <div className="mt-6 text-center">
-          <button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium">
-            View All Buyers
+        <div className="mt-4 sm:mt-6 text-center">
+          <button className="bg-black text-white px-4 sm:px-6 py-2 rounded-md hover:bg-gray-800 transition-colors duration-200 text-xs sm:text-sm font-medium w-full sm:w-auto">
+            VIEW ALL BUYERS
           </button>
         </div>
       </div>

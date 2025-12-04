@@ -27,6 +27,7 @@ export default function AddProductPage() {
     price: 0,
     discountPrice: 0,
     points: 0,
+    pointsCash: 0,
     category: "",
     images: [] as string[],
     coverImage: "",
@@ -43,11 +44,12 @@ export default function AddProductPage() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
+    const target = e.target as HTMLInputElement;
     
     // Convert number inputs to numbers
     const processedValue = type === 'number' ? Number(value) || 0 : 
-                          type === 'checkbox' ? checked : value;
+                          type === 'checkbox' ? target.checked : value;
     
     setFormData((prev) => ({ ...prev, [name]: processedValue }));
   };
@@ -208,26 +210,28 @@ export default function AddProductPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Discount Price ($)
+                Discount Price ($) <span className="text-gray-400 font-normal">(Optional)</span>
               </label>
               <input
                 type="number"
                 name="discountPrice"
                 value={formData.discountPrice}
                 onChange={handleInputChange}
-                required
                 min="0"
                 step="0.01"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="0.00"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                If set, original price will be shown crossed out with discount price below
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Points Earned
+                Earned Points Instapay/Credit or Debit
               </label>
               <input
                 type="number"
@@ -240,7 +244,7 @@ export default function AddProductPage() {
                 placeholder="0"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Points customer earns when purchasing this product (optional)
+                Points customer earns when purchasing with Instapay, Credit or Debit card (optional)
               </p>
             </div>
             <div className="flex items-end">
@@ -249,6 +253,37 @@ export default function AddProductPage() {
                   <strong>Points Value:</strong> {formData.points * 10} EGP
                 </p>
                 <p className="text-xs text-blue-600">
+                  1 point = 10 EGP
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Earned Points Cash
+              </label>
+              <input
+                type="number"
+                name="pointsCash"
+                value={formData.pointsCash}
+                onChange={handleInputChange}
+                min="0"
+                step="1"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="0"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Points customer earns when purchasing with cash on delivery (optional)
+              </p>
+            </div>
+            <div className="flex items-end">
+              <div className="bg-green-50 p-3 rounded-lg w-full">
+                <p className="text-sm text-green-800">
+                  <strong>Points Value:</strong> {formData.pointsCash * 10} EGP
+                </p>
+                <p className="text-xs text-green-600">
                   1 point = 10 EGP
                 </p>
               </div>
