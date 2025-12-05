@@ -9,7 +9,7 @@
 ```bash
 ssh root@luzasculture.org
 cd /var/www
-git clone https://github.com/MahmouT1/luzaend.git luzasculture
+git clone https://github.com/MahmouT1/luzaend2.git luzasculture
 cd luzasculture
 chmod +x deploy.sh
 sudo ./deploy.sh
@@ -31,7 +31,7 @@ cd /var/www
 
 ### 3️⃣ تنزيل المشروع:
 ```bash
-git clone https://github.com/MahmouT1/luzaend.git luzasculture
+git clone https://github.com/MahmouT1/luzaend2.git luzasculture
 ```
 
 ### 4️⃣ الدخول لمجلد المشروع:
