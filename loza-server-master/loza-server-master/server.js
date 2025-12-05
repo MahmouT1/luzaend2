@@ -8,9 +8,9 @@ import { v2 as cloudinary } from "cloudinary";
 // CONFIG
 // Use fallback values for development if environment variables are not set
 cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME || 'development-cloud-name',
-  api_key: process.env.CLOUD_API_KEY || 'development-api-key',
-  api_secret: process.env.CLOUD_SECRET_KEY || 'development-secret-key',
+  cloud_name: process.env.CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME || 'development-cloud-name',
+  api_key: process.env.CLOUD_API_KEY || process.env.CLOUDINARY_API_KEY || 'development-api-key',
+  api_secret: process.env.CLOUD_SECRET_KEY || process.env.CLOUDINARY_API_SECRET || 'development-secret-key',
 });
 
 // FILES IMPORT
@@ -25,7 +25,7 @@ import { checkAndUnlockProducts } from "./utils/autoUnlockProducts.js";
 
 // DEFINING VARIABLES
 const app = express();
-const port = 8000;
+const port = process.env.PORT || 8000;
 
 // MIDDLEWARES
 app.use(express.json({ limit: "50mb" }));
@@ -36,9 +36,28 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
+// CORS configuration - allow both main domain and admin subdomain
+const allowedOrigins = [
+  process.env.CLIENT_URL || 'http://localhost:3000',
+  process.env.ADMIN_URL || 'http://localhost:3000',
+  'https://luzasculture.org',
+  'https://www.luzasculture.org',
+  'https://admin.luzasculture.org',
+  'http://localhost:3000'
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL || 'http://localhost:3000'],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow all origins in production for now
+      }
+    },
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "PUT", "DELETE"],

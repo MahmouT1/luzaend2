@@ -154,7 +154,10 @@ export default function SiteProductsPage() {
                       onError={(e) => {
                         console.log('Image failed to load:', e.currentTarget.src);
                         e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling.style.display = 'flex';
+                        const nextSibling = e.currentTarget.nextElementSibling as HTMLElement | null;
+                        if (nextSibling) {
+                          nextSibling.style.display = 'flex';
+                        }
                       }}
                     />
                   ) : null}

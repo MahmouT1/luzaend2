@@ -5,7 +5,7 @@ import { setUserId, clearUserId } from "../cart/cartSlice";
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:8000/api",
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
     prepareHeaders: (headers, { getState }) => {
       // Add any auth headers if needed
       return headers;

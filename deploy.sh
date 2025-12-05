@@ -26,7 +26,7 @@ DOMAIN="luzasculture.org"
 ADMIN_SUBDOMAIN="admin.luzasculture.org"
 APP_DIR="/var/www/luzasculture"
 NODE_USER="luzauser"
-REPO_URL="https://github.com/MahmouT1/luzaend.git"
+REPO_URL="https://github.com/MahmouT1/luzaend2.git"
 
 echo -e "${CYAN}╔═══════════════════════════════════════════════════════╗${NC}"
 echo -e "${CYAN}║${NC} 🚀 LUZA'S CULTURE - Complete Automated Deployment ${CYAN}║${NC}"

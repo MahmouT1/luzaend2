@@ -1,9 +1,17 @@
 "use client";
 import { useSelector } from "react-redux";
+import { useState, useEffect } from "react";
 
 export default function DebugPage() {
   const { user } = useSelector((state: any) => state.auth);
   const cartState = useSelector((state: any) => state.cart);
+  const [localStorageData, setLocalStorageData] = useState<string>('Loading...');
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setLocalStorageData(localStorage.getItem('userData') || 'No user data in localStorage');
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -49,7 +57,7 @@ export default function DebugPage() {
           <div className="space-y-2">
             <p><strong>User Data:</strong></p>
             <pre className="bg-gray-100 p-4 rounded mt-2 text-sm overflow-auto">
-              {localStorage.getItem('userData') || 'No user data in localStorage'}
+              {localStorageData}
             </pre>
           </div>
         </div>
@@ -60,8 +68,10 @@ export default function DebugPage() {
           <div className="space-y-4">
             <button
               onClick={() => {
-                localStorage.removeItem('userData');
-                window.location.reload();
+                if (typeof window !== 'undefined') {
+                  localStorage.removeItem('userData');
+                  window.location.reload();
+                }
               }}
               className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
             >

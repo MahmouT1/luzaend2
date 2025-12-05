@@ -98,7 +98,12 @@ export const uploadToCloudinary = async (
   resourceType: 'image' | 'video' | 'auto' = 'auto'
 ): Promise<{ url: string; publicId: string }> => {
   try {
-    const result = await cloudinary.uploader.upload(filePath, {
+    // Handle Buffer type - convert to base64 or use as-is for Cloudinary
+    const uploadSource = typeof filePath === 'string' 
+      ? filePath 
+      : `data:image/jpeg;base64,${filePath.toString('base64')}`;
+    
+    const result = await cloudinary.uploader.upload(uploadSource as any, {
       folder: folder,
       resource_type: resourceType,
       quality: 'auto',

@@ -21,7 +21,8 @@ const authOptions: AuthOptions = {
       // Sync with backend when using Google
       if (account?.provider === "google") {
         try {
-          const response = await fetch("http://localhost:8000/api/users/social-auth", {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+          const response = await fetch(`${apiUrl}/users/social-auth`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

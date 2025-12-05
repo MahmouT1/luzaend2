@@ -53,7 +53,8 @@ export default function CheckoutPage() {
         if (!item._id || !isMounted) continue;
         
         try {
-          const apiUrl = `http://localhost:8000/api/products/get-single-product/${item._id}`;
+          const baseApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+          const apiUrl = `${baseApiUrl}/products/get-single-product/${item._id}`;
           const response = await fetch(apiUrl, {
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
