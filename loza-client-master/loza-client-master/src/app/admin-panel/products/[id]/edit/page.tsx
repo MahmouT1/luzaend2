@@ -52,6 +52,7 @@ export default function EditProductPage() {
   useEffect(() => {
     if (productData) {
       console.log('Product data loaded:', productData);
+      console.log('Discount Price from DB:', productData.discountPrice);
       
       // Extract sizes from info array
       const sizes = productData.info?.map((item: any) => item.size).filter(Boolean) || [];
@@ -64,11 +65,18 @@ export default function EditProductPage() {
       // Get cover image
       const coverImg = productData.coverImage || (images.length > 0 ? images[0] : '');
       
+      // Handle discountPrice properly - keep the exact value from database
+      const discountPriceValue = productData.discountPrice !== undefined && productData.discountPrice !== null 
+        ? Number(productData.discountPrice) 
+        : 0;
+      
+      console.log('Discount Price processed:', discountPriceValue);
+      
       setFormData({
         name: productData.name || '',
         description: productData.description || '',
         price: productData.price || 0,
-        discountPrice: productData.discountPrice || 0,
+        discountPrice: discountPriceValue,
         stock: productData.info?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0,
         points: productData.points || 0,
         pointsCash: productData.pointsCash || 0,
@@ -187,11 +195,16 @@ export default function EditProductPage() {
     }
 
     try {
+      // Ensure discountPrice is a valid number (0 or positive number)
+      const discountPriceValue = formData.discountPrice !== undefined && formData.discountPrice !== null 
+        ? Number(formData.discountPrice) 
+        : 0;
+
       const updateData = {
         name: formData.name,
         description: formData.description,
         price: formData.price,
-        discountPrice: formData.discountPrice,
+        discountPrice: discountPriceValue >= 0 ? discountPriceValue : 0,
         points: formData.points,
         category: formData.category,
         info: productInfo,
@@ -204,12 +217,20 @@ export default function EditProductPage() {
         ...(formData.coverImage && formData.coverImage.startsWith('data:') ? { coverImage: formData.coverImage } : {}),
       };
 
+      console.log('Update data being sent:', JSON.stringify(updateData, null, 2));
+
       await updateProduct({ data: updateData, id: productId }).unwrap();
       toast.success('Product updated successfully!');
     router.push('/admin-panel/products');
     } catch (error: any) {
       console.error('Update product error:', error);
-      toast.error(error?.data?.message || 'Failed to update product');
+      const errorMessage = error?.data?.message || error?.message || 'Failed to update product';
+      toast.error(errorMessage);
+      console.error('Full error details:', {
+        status: error?.status,
+        data: error?.data,
+        message: error?.message
+      });
     }
   };
 

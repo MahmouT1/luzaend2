@@ -8,14 +8,11 @@ import { useRouter } from "next/navigation";
  * 
  * This page redirects /admin to /admin-panel/login for security.
  * The old /admin routes are deprecated in favor of /admin-panel.
- * 
- * For production: This redirect ensures old admin URLs don't expose admin panel.
  */
 export default function AdminRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to secure admin panel login
     router.replace('/admin-panel/login');
   }, [router]);
 

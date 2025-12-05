@@ -107,6 +107,15 @@ export default function OrdersPage() {
     }
   };
 
+  // Helper function to format date and time
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }),
+      time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })
+    };
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Pending': return 'bg-yellow-100 text-yellow-800';
@@ -391,7 +400,10 @@ export default function OrdersPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(order.createdAt).toLocaleDateString()}
+                          <div className="flex flex-col">
+                            <span>{formatDateTime(order.createdAt).date}</span>
+                            <span className="text-xs text-gray-400">{formatDateTime(order.createdAt).time}</span>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                           <div className="flex flex-col space-y-2">
@@ -462,7 +474,7 @@ export default function OrdersPage() {
                   <div className="space-y-2 text-sm">
                     <p><strong>Order #:</strong> #{selectedOrder.orderNumber}</p>
                     <p><strong>Status:</strong> {selectedOrder.orderStatus}</p>
-                    <p><strong>Date:</strong> {new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
+                    <p><strong>Date:</strong> {formatDateTime(selectedOrder.createdAt).date} <span className="text-gray-500">{formatDateTime(selectedOrder.createdAt).time}</span></p>
                     <p><strong>Subtotal:</strong> {formatPrice(selectedOrder.subtotal || selectedOrder.totalPrice)}</p>
                     {selectedOrder.deliveryFee && (
                       <p><strong>Delivery Fee:</strong> {formatPrice(selectedOrder.deliveryFee)}</p>

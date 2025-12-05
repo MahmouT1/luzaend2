@@ -98,7 +98,7 @@ const User = () => {
       )}
       
       {user?.role === "admin" && (
-        <Link href={"/admin"} className="text-slate-700">
+        <Link href={"/admin-panel"} className="text-slate-700">
           Admin
         </Link>
       )}

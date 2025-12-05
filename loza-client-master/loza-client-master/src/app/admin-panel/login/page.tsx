@@ -191,15 +191,32 @@ export default function AdminPanelLoginPage() {
             <button
               type="submit"
               disabled={isLoading || isSubmitting}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-lg hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg"
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-3 px-4 rounded-lg hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              style={{ color: '#FFFFFF' }}
             >
               {isLoading || isSubmitting ? (
-                <span className="flex items-center justify-center">
+                <span 
+                  className="flex items-center justify-center font-bold text-base" 
+                  style={{ 
+                    color: '#FFFFFF',
+                    fontWeight: 600,
+                    textShadow: 'none'
+                  }}
+                >
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                   Authenticating...
                 </span>
               ) : (
-                "Sign In to Admin Panel"
+                <span 
+                  className="font-bold text-base" 
+                  style={{ 
+                    color: '#FFFFFF',
+                    fontWeight: 600,
+                    textShadow: 'none'
+                  }}
+                >
+                  Sign In to Admin Panel
+                </span>
               )}
             </button>
           </form>

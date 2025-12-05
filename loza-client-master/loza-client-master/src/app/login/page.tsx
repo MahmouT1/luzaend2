@@ -157,9 +157,19 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              style={{ color: '#FFFFFF' }}
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              <span 
+                className="font-bold text-base" 
+                style={{ 
+                  color: '#FFFFFF',
+                  fontWeight: 600,
+                  textShadow: 'none'
+                }}
+              >
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </span>
             </button>
           </form>
 

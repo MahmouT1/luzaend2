@@ -29,17 +29,17 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
         
         <div className="mt-4">
-          <h3 className="text-lg font-medium text-gray-900 group-hover:text-black transition-colors">
+          <h3 className="text-lg font-product-name text-gray-900 group-hover:text-black transition-colors">
             {product.name}
           </h3>
           <p className="mt-1 text-sm text-gray-500">{product.category}</p>
           
           <div className="mt-2 flex items-center space-x-2">
-            <p className="text-lg font-medium text-gray-900">
+            <p className="text-lg font-price-bold text-gray-900">
               {formatPrice(product.price)}
             </p>
             {product.originalPrice && (
-              <p className="text-sm text-gray-500 line-through">
+              <p className="text-sm font-price text-gray-500 line-through">
                 {formatPrice(product.originalPrice)}
               </p>
             )}

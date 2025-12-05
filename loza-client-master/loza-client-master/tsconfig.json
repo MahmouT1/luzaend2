@@ -38,6 +38,9 @@
     "src/app/**/*"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "**/admin-login/**",
+    "**/admin-test/**",
+    ".next/**"
   ]
 }

@@ -3,7 +3,7 @@ import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
 import { User } from "../models/user.model.js";
 import PDFDocument from "pdfkit";
-import { sendOrderConfirmationEmail } from "../services/email.service.js";
+import { sendOrderConfirmationEmail, sendStoreOwnerNotificationEmail } from "../services/email.service.js";
 
 // CREATE ORDER
 export const createOrder = async (req, res) => {
@@ -22,12 +22,8 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    if (!userInfo.userId) {
-      return res.status(400).json({ 
-        message: "User ID is required" 
-      });
-    }
-
+    // userId is optional - allow guest checkout
+    // Only validate orderItems array
     if (!Array.isArray(orderItems) || orderItems.length === 0) {
       return res.status(400).json({ 
         message: "Order items must be a non-empty array" 
@@ -79,7 +75,8 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    // Update user's points and purchased products
+    // Update user's points and purchased products - only if userId is provided (logged in user)
+    if (userInfo.userId) {
       console.log("Finding user with ID:", userInfo.userId);
       const userRecord = await User.findById(userInfo.userId);
       if (userRecord) {
@@ -129,6 +126,11 @@ export const createOrder = async (req, res) => {
 
         userRecord.totalPurchases += 1;
         await userRecord.save();
+      } else {
+        console.log("⚠️ User not found with ID:", userInfo.userId);
+      }
+    } else {
+      console.log("ℹ️ Guest checkout - skipping user points and purchases update");
     }
 
     // If products were processed by quantityChecker, save them
@@ -239,7 +241,7 @@ export const createOrder = async (req, res) => {
         try {
           const invoice = await Invoice.create({
             orderId: order._id,
-            userId: userInfo.userId,
+            userId: userInfo.userId || null, // Optional for guest checkout
             pdf: pdfBuffer,
           });
           console.log("Invoice created:", invoice._id);
@@ -326,14 +328,53 @@ export const createOrder = async (req, res) => {
     // Send order confirmation email
     try {
       console.log("📧 Sending order confirmation email...");
-      const emailResult = await sendOrderConfirmationEmail(order, userInfo.email);
-      if (emailResult.success) {
-        console.log("✅ Order confirmation email sent successfully");
+      console.log("📧 Customer email:", userInfo?.email);
+      console.log("📧 Order ID:", order?._id);
+      console.log("📧 Order Number:", order?.orderNumber);
+      
+      // Validate email before sending
+      if (!userInfo?.email || typeof userInfo.email !== 'string' || !userInfo.email.includes('@')) {
+        console.error("❌ Invalid email address provided:", userInfo?.email);
+        console.log("⚠️ Skipping email send - invalid email address");
       } else {
-        console.log("⚠️ Failed to send order confirmation email:", emailResult.message);
+        const emailResult = await sendOrderConfirmationEmail(order, userInfo.email);
+        if (emailResult.success) {
+          console.log("✅ Order confirmation email sent successfully");
+          console.log("📧 Message ID:", emailResult.messageId);
+        } else {
+          console.log("⚠️ Failed to send order confirmation email:", emailResult.message);
+          if (emailResult.error) {
+            console.error("📧 Error details:", emailResult.error);
           }
-        } catch (emailError) {
+          console.log("💡 Check server logs above for more details");
+        }
+      }
+    } catch (emailError) {
       console.error("❌ Error sending order confirmation email:", emailError);
+      console.error("❌ Error stack:", emailError.stack);
+      // Don't fail the order if email fails
+    }
+
+    // Send store owner notification email
+    try {
+      console.log("📧 Sending store owner notification email...");
+      console.log("📧 Order ID:", order?._id);
+      console.log("📧 Order Number:", order?.orderNumber);
+      
+      const ownerEmailResult = await sendStoreOwnerNotificationEmail(order);
+      if (ownerEmailResult.success) {
+        console.log("✅ Store owner notification email sent successfully");
+        console.log("📧 Message ID:", ownerEmailResult.messageId);
+      } else {
+        console.log("⚠️ Failed to send store owner notification email:", ownerEmailResult.message);
+        if (ownerEmailResult.error) {
+          console.error("📧 Error details:", ownerEmailResult.error);
+        }
+        console.log("💡 Check server logs above for more details");
+      }
+    } catch (ownerEmailError) {
+      console.error("❌ Error sending store owner notification email:", ownerEmailError);
+      console.error("❌ Error stack:", ownerEmailError.stack);
       // Don't fail the order if email fails
     }
 

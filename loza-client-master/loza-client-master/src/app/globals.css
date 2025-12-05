@@ -458,3 +458,44 @@ main:has(.category-page) {
 .scroll-section {
   scroll-snap-align: start;
 }
+
+/* Professional Typography for Fashion E-commerce */
+.font-product-name {
+  font-family: var(--font-mulish), system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Mulish font for product page text elements */
+.font-mulish {
+  font-family: var(--font-mulish), system-ui, -apple-system, sans-serif;
+}
+
+.font-price {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.font-price-bold {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Apply tabular numbers to all price elements */
+[class*="price"], 
+.price {
+  font-variant-numeric: tabular-nums;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Apply system font to all numbers and prices globally */
+.font-price,
+.font-price-bold,
+[class*="price"],
+.price {
+  font-family: system-ui, -apple-system, sans-serif !important;
+}

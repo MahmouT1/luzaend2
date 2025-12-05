@@ -4,7 +4,7 @@ import React from 'react';
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Header */}
         <div className="text-center mb-16">
@@ -144,18 +144,6 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
-          <section className="mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">10. Contact Us</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              If you have questions, concerns, or requests regarding this Privacy Policy or our data 
-              practices, please contact us:
-            </p>
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <p className="text-gray-700 mb-2"><strong>Email:</strong> support@luzasculture.com</p>
-              <p className="text-gray-700 mb-2"><strong>Phone:</strong> 035438384, 01254486347</p>
-              <p className="text-gray-700"><strong>Address:</strong> LUZA'S CULTURE Customer Service</p>
-            </div>
-          </section>
         </div>
       </div>
     </div>

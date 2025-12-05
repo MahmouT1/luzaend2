@@ -786,11 +786,11 @@ export default function CheckoutPage() {
                               <div className="text-sm text-green-800">
                                 <div className="flex justify-between items-center mb-2">
                                   <span>Points Discount:</span>
-                                  <span className="font-medium text-lg">-{pointsDiscount.toFixed(2)} EGP</span>
+                                  <span className="font-price-bold text-lg">-{pointsDiscount.toFixed(2)} EGP</span>
                                 </div>
                                 <div className="flex justify-between items-center mb-2">
                                   <span>Remaining Amount:</span>
-                                  <span className="font-medium text-lg">{remainingAmount.toFixed(2)} EGP</span>
+                                  <span className="font-price-bold text-lg">{remainingAmount.toFixed(2)} EGP</span>
                                 </div>
                                 <div className="text-xs bg-green-100 p-2 rounded-lg">
                                   Remaining amount will be paid in cash on delivery
@@ -872,7 +872,7 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
+                        <h3 className="font-product-name text-gray-900 truncate">{item.name}</h3>
                         <p className="text-sm text-gray-500">
                           Size: {item.size || "One Size"}
                         </p>
@@ -906,7 +906,7 @@ export default function CheckoutPage() {
                           return null;
                         })()}
                       </div>
-                      <p className="font-semibold text-gray-900 text-right">
+                      <p className="font-price-bold text-gray-900 text-right">
                         {formatPrice(item.price * item.quantity)}
                       </p>
                     </div>
@@ -917,12 +917,12 @@ export default function CheckoutPage() {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between items-center py-2">
                     <span className="text-gray-600">Subtotal</span>
-                    <span className="text-lg font-medium text-gray-900">{cartTotalPrice.toFixed(2)} EGP</span>
+                    <span className="text-lg font-price-bold text-gray-900">{cartTotalPrice.toFixed(2)} EGP</span>
                   </div>
                   
                   <div className="flex justify-between items-center py-2">
                     <span className="text-gray-600">Delivery Fee</span>
-                    <span className="text-lg font-medium text-gray-900">
+                    <span className="text-lg font-price-bold text-gray-900">
                       {shipping.toFixed(2)} EGP
                     </span>
                   </div>
@@ -979,12 +979,12 @@ export default function CheckoutPage() {
                     <>
                       <div className="flex justify-between items-center py-2 text-green-600">
                         <span>Points Discount</span>
-                        <span className="font-medium">-{pointsDiscount.toFixed(2)} EGP</span>
+                        <span className="font-price-bold">-{pointsDiscount.toFixed(2)} EGP</span>
                       </div>
                       <div className="border-t border-gray-200 pt-3">
                         <div className="flex justify-between items-center">
                           <span className="text-lg font-medium text-gray-900">Remaining Amount</span>
-                          <span className="text-xl font-light text-gray-900">{remainingAmount.toFixed(2)} EGP</span>
+                          <span className="text-xl font-price-bold text-gray-900">{remainingAmount.toFixed(2)} EGP</span>
                         </div>
                       </div>
                     </>
@@ -994,7 +994,7 @@ export default function CheckoutPage() {
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between items-center">
                         <span className="text-lg sm:text-xl font-medium text-gray-900">Total</span>
-                        <span className="text-xl sm:text-2xl font-light text-gray-900">{total.toFixed(2)} EGP</span>
+                        <span className="text-xl sm:text-2xl font-price-bold text-gray-900">{total.toFixed(2)} EGP</span>
                       </div>
                     </div>
                   )}

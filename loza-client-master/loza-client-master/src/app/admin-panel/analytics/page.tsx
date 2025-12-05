@@ -139,6 +139,89 @@ export default function AnalyticsPage() {
     return ((current - previous) / previous) * 100;
   };
 
+  // Generate sales data from orders if API data is empty
+  const generatedSalesData = useMemo(() => {
+    if (salesData.length > 0) return null; // Use API data if available
+    
+    if (!ordersResponse?.orders || ordersResponse.orders.length === 0) return [];
+    
+    // Calculate date range
+    let daysBack = 7;
+    switch (dateRange) {
+      case '7d': daysBack = 7; break;
+      case '30d': daysBack = 30; break;
+      case '90d': daysBack = 90; break;
+      case '1y': daysBack = 365; break;
+    }
+    
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysBack);
+    
+    // Filter orders by date range
+    const filteredOrders = ordersResponse.orders.filter((order: any) => {
+      const orderDate = new Date(order.createdAt || order.orderDate || Date.now());
+      return orderDate >= startDate;
+    });
+    
+    // Group by date
+    const salesByDate: { [key: string]: number } = {};
+    filteredOrders.forEach((order: any) => {
+      const date = new Date(order.createdAt || order.orderDate || Date.now()).toISOString().split('T')[0];
+      if (!salesByDate[date]) {
+        salesByDate[date] = 0;
+      }
+      salesByDate[date] += (order.finalAmount || order.totalPrice || 0);
+    });
+    
+    // Format for chart
+    return Object.entries(salesByDate)
+      .map(([date, sales]) => ({
+        date,
+        sales: Math.round(sales)
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [ordersResponse, dateRange, salesData]);
+
+  // Generate top products from orders if API data is empty
+  const generatedTopProducts = useMemo(() => {
+    if (topProducts.length > 0) return null; // Use API data if available
+    
+    if (!ordersResponse?.orders || ordersResponse.orders.length === 0) return [];
+    
+    const productSales: { [key: string]: { name: string; totalSales: number; totalQuantity: number; id: string } } = {};
+    
+    ordersResponse.orders.forEach((order: any) => {
+      if (order.orderItems && Array.isArray(order.orderItems)) {
+        order.orderItems.forEach((item: any) => {
+          const productId = item.productId?._id || item.productId || item.id || 'unknown';
+          const productName = item.name || item.productName || item.productInfo?.name || 'Unknown Product';
+          const itemPrice = item.price || item.unitPrice || 0;
+          const quantity = item.quantity || 0;
+          
+          if (!productSales[productId]) {
+            productSales[productId] = {
+              id: productId,
+              name: productName,
+              totalSales: 0,
+              totalQuantity: 0
+            };
+          }
+          
+          productSales[productId].totalSales += itemPrice * quantity;
+          productSales[productId].totalQuantity += quantity;
+        });
+      }
+    });
+    
+    return Object.values(productSales)
+      .sort((a, b) => b.totalSales - a.totalSales)
+      .slice(0, 10);
+  }, [ordersResponse, topProducts]);
+
+  // Use generated data if API data is empty
+  const finalSalesData = salesData.length > 0 ? salesData : (generatedSalesData || []);
+  const finalTopProducts = topProducts.length > 0 ? topProducts : (generatedTopProducts || []);
+
   // Format sales data for charts
   const formatSalesData = (data: any[]) => {
     if (!data || data.length === 0) return [];
@@ -302,7 +385,7 @@ export default function AnalyticsPage() {
     );
   }
 
-  const formattedSalesData = formatSalesData(salesData);
+  const formattedSalesData = formatSalesData(finalSalesData);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -388,37 +471,37 @@ export default function AnalyticsPage() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="#6B7280"
-                  fontSize={12}
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#6B7280"
+                    fontSize={12}
                     tickLine={false}
-                />
-                <YAxis 
-                  stroke="#6B7280"
-                  fontSize={12}
+                  />
+                  <YAxis 
+                    stroke="#6B7280"
+                    fontSize={12}
                     tickFormatter={(value) => formatPrice(value)}
                     tickLine={false}
-                />
-                <Tooltip 
+                  />
+                  <Tooltip 
                     formatter={(value: any) => [formatPrice(value), 'Sales']}
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
                       borderRadius: '12px',
                       padding: '12px',
                       boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                  }}
-                />
+                    }}
+                  />
                   <Area 
-                  type="monotone" 
-                  dataKey="sales" 
-                  stroke="#8b5cf6" 
-                  strokeWidth={3}
+                    type="monotone" 
+                    dataKey="sales" 
+                    stroke="#8b5cf6" 
+                    strokeWidth={3}
                     fill="url(#colorSales)"
-                />
+                  />
                 </AreaChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
             ) : (
               <div className="h-[350px] flex items-center justify-center text-gray-400">
                 <p>No sales data available for this period</p>
@@ -437,28 +520,28 @@ export default function AnalyticsPage() {
                 <PackageIcon className="w-6 h-6 text-white" />
               </div>
             </div>
-            {topProducts.length > 0 ? (
+            {finalTopProducts.length > 0 ? (
               <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie
-                  data={topProducts}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
+                <PieChart>
+                  <Pie
+                    data={finalTopProducts}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
                     label={({ name, totalSales }) => {
-                      const percentage = topProducts.reduce((sum: number, p: any) => sum + (p.totalSales || 0), 0);
+                      const percentage = finalTopProducts.reduce((sum: number, p: any) => sum + (p.totalSales || 0), 0);
                       const percent = percentage > 0 ? ((totalSales / percentage) * 100).toFixed(1) : 0;
                       return `${name}: ${percent}%`;
                     }}
                     outerRadius={120}
-                  fill="#8884d8"
-                  dataKey="totalSales"
-                >
-                  {topProducts.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
+                    fill="#8884d8"
+                    dataKey="totalSales"
+                  >
+                    {finalTopProducts.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
                     formatter={(value: any) => [formatPrice(value), 'Revenue']}
                     contentStyle={{
                       backgroundColor: '#fff',
@@ -484,7 +567,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Top Products Bar Chart */}
-        {topProducts.length > 0 && (
+        {finalTopProducts.length > 0 && (
           <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-10 hover:shadow-2xl transition-shadow duration-300">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -496,7 +579,7 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={topProducts.slice(0, 8)}>
+              <BarChart data={finalTopProducts.slice(0, 8)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis 
                   dataKey="name" 
@@ -528,7 +611,7 @@ export default function AnalyticsPage() {
                   fill="#8b5cf6"
                   radius={[8, 8, 0, 0]}
                 >
-                  {topProducts.slice(0, 8).map((entry, index) => (
+                  {finalTopProducts.slice(0, 8).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Bar>
@@ -551,9 +634,9 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div className="space-y-4">
-              {topProducts.length > 0 ? (
-                topProducts.slice(0, 8).map((product: any, index) => {
-                  const totalRevenue = topProducts.reduce((sum: number, p: any) => sum + (p.totalSales || 0), 0);
+              {finalTopProducts.length > 0 ? (
+                finalTopProducts.slice(0, 8).map((product: any, index) => {
+                  const totalRevenue = finalTopProducts.reduce((sum: number, p: any) => sum + (p.totalSales || 0), 0);
                   const percentage = totalRevenue > 0 ? ((product.totalSales / totalRevenue) * 100) : 0;
                   
                   return (

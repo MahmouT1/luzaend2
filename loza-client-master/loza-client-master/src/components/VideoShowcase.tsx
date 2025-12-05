@@ -53,7 +53,7 @@ const VideoShowcase = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {/* Panel 1 - Left */}
           <div
-            className={`relative aspect-[3/4] overflow-hidden group transition-all duration-1000 ease-out ${
+            className={`relative aspect-[3/4] overflow-hidden group transition-all duration-1000 ease-out hidden md:block ${
               isVisible
                 ? "translate-y-0 opacity-100"
                 : "translate-y-10 opacity-0"
@@ -75,7 +75,7 @@ const VideoShowcase = () => {
             </div>
           </div>
 
-          {/* Panel 2 - Middle */}
+          {/* Panel 2 - Middle - Show on mobile */}
           <div
             className={`relative aspect-[3/4] overflow-hidden group transition-all duration-1000 ease-out ${
               isVisible
@@ -101,7 +101,7 @@ const VideoShowcase = () => {
 
           {/* Panel 3 - Right */}
           <div
-            className={`relative aspect-[3/4] overflow-hidden group transition-all duration-1000 ease-out ${
+            className={`relative aspect-[3/4] overflow-hidden group transition-all duration-1000 ease-out hidden md:block ${
               isVisible
                 ? "translate-y-0 opacity-100"
                 : "translate-y-10 opacity-0"

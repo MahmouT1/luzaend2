@@ -246,9 +246,19 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-black py-3 px-4 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ color: '#FFFFFF' }}
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              <span 
+                className="font-bold text-base" 
+                style={{ 
+                  color: '#FFFFFF',
+                  fontWeight: 600,
+                  textShadow: 'none'
+                }}
+              >
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </span>
             </button>
           </form>
 

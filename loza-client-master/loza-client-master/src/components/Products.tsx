@@ -109,21 +109,21 @@ const ProductCard = ({
           )}
         </div>
         <div className="mt-3 sm:mt-4">
-          <h3 className={`text-xs sm:text-sm font-medium leading-tight ${isScheduled ? 'text-gray-500' : 'text-gray-900'}`}>
+          <h3 className={`text-xs sm:text-sm font-product-name leading-tight ${isScheduled ? 'text-gray-500' : 'text-gray-900'}`}>
             {product.name}
           </h3>
           <div className={`mt-1 flex flex-col ${isScheduled ? 'text-gray-400' : ''}`}>
             {product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price ? (
               <>
-                <span className={`text-xs sm:text-sm font-light line-through ${isScheduled ? 'text-gray-400' : 'text-gray-500'}`}>
+                <span className={`text-xs font-price line-through ${isScheduled ? 'text-gray-400' : 'text-gray-500'}`}>
                   {formatPrice(product.price)}
                 </span>
-                <span className={`text-sm sm:text-lg font-semibold ${isScheduled ? 'text-gray-400' : 'text-gray-900'}`}>
+                <span className={`text-xs sm:text-sm font-price-bold ${isScheduled ? 'text-gray-400' : 'text-gray-900'}`}>
                   {formatPrice(product.discountPrice)}
                 </span>
               </>
             ) : (
-              <span className={`text-sm sm:text-lg font-semibold ${isScheduled ? 'text-gray-400' : 'text-gray-900'}`}>
+              <span className={`text-xs sm:text-sm font-price-bold ${isScheduled ? 'text-gray-400' : 'text-gray-900'}`}>
                 {formatPrice(product.price)}
               </span>
             )}

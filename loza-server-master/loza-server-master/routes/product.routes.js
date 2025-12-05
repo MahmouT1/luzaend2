@@ -4,6 +4,7 @@ import {
   getAllProducts,
   getProductsByCategoryName,
   getSingleProduct,
+  updateProduct,
   deleteProduct,
   searchProducts,
 } from "../controllers/product.controller.js";
@@ -26,6 +27,13 @@ productRouter.get("/get-products/:categoryName", getProductsByCategoryName);
 productRouter.get("/get-single-product/:id", getSingleProduct);
 
 productRouter.get("/search", searchProducts);
+
+productRouter.put(
+  "/update-product/:id",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  updateProduct
+);
 
 productRouter.delete(
   "/delete-product/:id",

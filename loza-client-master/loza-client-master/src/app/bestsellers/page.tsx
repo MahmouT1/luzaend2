@@ -119,10 +119,10 @@ export default function BestsellersPage() {
             )}
           </div>
           <div className="mt-3 sm:mt-4">
-            <h3 className={`text-xs sm:text-sm font-medium leading-tight ${isScheduled ? 'text-gray-500' : 'text-gray-900'}`}>
+            <h3 className={`text-xs sm:text-sm font-product-name leading-tight ${isScheduled ? 'text-gray-500' : 'text-gray-900'}`}>
               {product.name}
             </h3>
-            <p className={`mt-1 text-sm sm:text-lg font-semibold ${isScheduled ? 'text-gray-400' : 'text-gray-900'}`}>
+            <p className={`mt-1 text-sm sm:text-lg font-price-bold ${isScheduled ? 'text-gray-400' : 'text-gray-900'}`}>
               {formatPrice(product.price)}
             </p>
             {/* Star Rating */}

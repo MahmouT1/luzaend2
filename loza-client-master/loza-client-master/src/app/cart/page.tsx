@@ -149,7 +149,7 @@ export default function CartPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start mb-4">
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-xl font-medium text-gray-900 mb-2 truncate">
+                              <h3 className="text-xl font-product-name text-gray-900 mb-2 truncate">
                                 {item.name}
                               </h3>
                               <div className="space-y-1">
@@ -201,10 +201,10 @@ export default function CartPage() {
                             </div>
 
                             <div className="text-right">
-                              <p className="text-2xl font-light text-gray-900">
+                              <p className="text-2xl font-price-bold text-gray-900">
                                 {formatPrice(item.price * item.quantity)}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm font-price text-gray-500">
                                 {formatPrice(item.price)} each
                               </p>
                             </div>
@@ -228,12 +228,12 @@ export default function CartPage() {
                   <div className="space-y-4 mb-8">
                     <div className="flex justify-between items-center py-3">
                       <span className="text-gray-600">Subtotal</span>
-                      <span className="text-lg font-medium text-gray-900">{formatPrice(total)}</span>
+                      <span className="text-lg font-price-bold text-gray-900">{formatPrice(total)}</span>
                     </div>
 
                     <div className="flex justify-between items-center py-3">
                       <span className="text-gray-600">Shipping</span>
-                      <span className="text-lg font-medium text-gray-900">
+                      <span className="text-lg font-price-bold text-gray-900">
                         {shipping === 0 ? (
                           <span className="text-green-600">Free</span>
                         ) : (
@@ -257,7 +257,7 @@ export default function CartPage() {
                     <div className="border-t border-gray-200 pt-4">
                       <div className="flex justify-between items-center">
                         <span className="text-xl font-medium text-gray-900">Total</span>
-                        <span className="text-2xl font-light text-gray-900">{formatPrice(total + shipping)}</span>
+                        <span className="text-2xl font-price-bold text-gray-900">{formatPrice(total + shipping)}</span>
                       </div>
                       <p className="text-sm text-gray-500 mt-1">
                         {shipping === 0 ? 'Free shipping included' : 'Shipping included'}

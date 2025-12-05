@@ -396,24 +396,24 @@ export default function SingleProduct({ productId }: any) {
               </div>
 
               {/* Product Info */}
-              <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+              <div className="lg:col-span-1 space-y-4 sm:space-y-6 font-mulish">
                 {/* Title and Price */}
                 <div>
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-light tracking-tight text-gray-900">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-product-name tracking-tight text-gray-900">
                     {product.name}
                   </h1>
                   <div className="mt-3 sm:mt-4 flex flex-col space-y-1">
                     {product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price ? (
                       <>
-                        <span className="text-lg sm:text-xl font-light text-gray-400 line-through">
+                        <span className="text-lg sm:text-xl font-price text-gray-400 line-through">
                           {formatPrice(product.price)}
                         </span>
-                        <span className="text-2xl sm:text-3xl font-light text-gray-900">
+                        <span className="text-2xl sm:text-3xl font-price-bold text-gray-900">
                           {formatPrice(product.discountPrice)}
                         </span>
                       </>
                     ) : (
-                    <span className="text-2xl sm:text-3xl font-light text-gray-900">
+                    <span className="text-2xl sm:text-3xl font-price-bold text-gray-900">
                       {formatPrice(product.price)}
                     </span>
                     )}
@@ -432,17 +432,17 @@ export default function SingleProduct({ productId }: any) {
 
                 {/* Description */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">
+                  <h3 className="text-sm font-medium text-gray-900 font-mulish">
                     Description
                   </h3>
-                  <p className="mt-2 text-sm text-gray-600">
+                  <p className="mt-2 text-sm text-gray-600 font-mulish">
                     {product.description}
                   </p>
                 </div>
 
                 {/* Color Selection */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3 font-mulish">
                     Color
                   </h3>
                   {/* <div className="flex flex-wrap gap-2">
@@ -464,7 +464,7 @@ export default function SingleProduct({ productId }: any) {
 
                 {/* Size Selection */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3 font-mulish">
                     Size
                   </h3>
                   {product.info && product.info.length > 0 ? (
@@ -498,13 +498,13 @@ export default function SingleProduct({ productId }: any) {
                       })}
                     </div>
                   ) : (
-                    <p className="text-gray-500">No sizes available</p>
+                    <p className="text-gray-500 font-mulish">No sizes available</p>
                   )}
                 </div>
 
                 {/* Quantity Selection */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3 font-mulish">
                     Quantity
                   </h3>
                   <div className="flex items-center space-x-2 sm:space-x-3">
@@ -650,12 +650,12 @@ export default function SingleProduct({ productId }: any) {
 
           {/* Add Rating Form */}
           <div className="mb-12 bg-gray-50 p-6 sm:p-8 rounded-lg border border-gray-200">
-            <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-4">
+            <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-4 font-mulish">
               Share Your Experience
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 font-mulish">
                   Your Rating
                 </label>
                 <StarRating
@@ -667,7 +667,7 @@ export default function SingleProduct({ productId }: any) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 font-mulish">
                   Your Name
                 </label>
                 <input
@@ -675,11 +675,11 @@ export default function SingleProduct({ productId }: any) {
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   placeholder="Enter your name"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent font-mulish"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 font-mulish">
                   Your Review (Optional)
                 </label>
                 <textarea
@@ -766,7 +766,7 @@ export default function SingleProduct({ productId }: any) {
           {/* Existing Reviews */}
           {product?.ratings && product.ratings.length > 0 ? (
             <div className="space-y-6">
-              <h3 className="text-lg sm:text-xl font-medium text-gray-900">
+              <h3 className="text-lg sm:text-xl font-medium text-gray-900 font-mulish">
                 All Reviews ({product.ratings.length})
               </h3>
               {product.ratings
@@ -779,10 +779,10 @@ export default function SingleProduct({ productId }: any) {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 font-mulish">
                           {rating.userName || "Anonymous"}
                         </p>
-                        <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1 font-mulish">
                           {new Date(rating.createdAt).toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "long",
@@ -798,7 +798,7 @@ export default function SingleProduct({ productId }: any) {
                       />
                     </div>
                     {rating.review && (
-                      <p className="text-sm text-gray-600 mt-3 leading-relaxed">
+                      <p className="text-sm text-gray-600 mt-3 leading-relaxed font-mulish">
                         {rating.review}
                       </p>
                     )}
@@ -807,7 +807,7 @@ export default function SingleProduct({ productId }: any) {
             </div>
           ) : (
             <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-gray-500">No reviews yet. Be the first to review this product!</p>
+              <p className="text-gray-500 font-mulish">No reviews yet. Be the first to review this product!</p>
             </div>
           )}
         </div>

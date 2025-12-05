@@ -74,7 +74,7 @@ const ProfessionalLanding = () => {
           style={{ transitionDelay: '400ms' }}
         >
           <h1 className="text-white text-3xl sm:text-4xl md:text-4xl lg:text-4xl xl:text-4xl font-light tracking-wide text-center leading-relaxed" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 300 }}>
-            The Path to Excellence<br />with LUZA'S CULTURE
+            The Path to Excellence<br />with Culture For The Rare
           </h1>
         </div>
 
