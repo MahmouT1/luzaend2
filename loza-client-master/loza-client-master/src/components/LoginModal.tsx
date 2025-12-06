@@ -112,7 +112,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const switchToRegister = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    e.nativeEvent.stopImmediatePropagation();
+    // Use nativeEvent for stopImmediatePropagation
+    if (e.nativeEvent && typeof e.nativeEvent.stopImmediatePropagation === 'function') {
+      e.nativeEvent.stopImmediatePropagation();
+    }
     console.log("🔄 Switching to Register mode");
     resetLogin();
     setIsRegisterMode(true);
@@ -454,12 +457,17 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    e.nativeEvent?.stopImmediatePropagation?.();
+                    console.log("🔄 Button clicked - Switching to Register mode");
                     switchToRegister(e);
                   }}
                   onMouseDown={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                   }}
+                  onContextMenu={(e) => e.preventDefault()}
                   className="font-medium text-black hover:underline"
+                  style={{ cursor: 'pointer' }}
                 >
                   Sign up
                 </button>
