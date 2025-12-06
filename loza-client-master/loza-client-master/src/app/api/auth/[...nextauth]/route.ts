@@ -14,6 +14,10 @@ const authOptions: AuthOptions = {
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET || "fallback-secret",
+  pages: {
+    signIn: '/login',
+    error: '/login',
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       console.log("🔐 NextAuth signIn callback:", { user, account, profile });

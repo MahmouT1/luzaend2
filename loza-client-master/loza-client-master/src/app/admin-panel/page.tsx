@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   PackageIcon, 
@@ -21,10 +22,21 @@ export default function AdminDashboard() {
   const [mounted, setMounted] = useState(false);
   const { user } = useSelector((state: any) => state.auth);
   const { data: ordersData } = useGetAllOrdersQuery({});
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Redirect to login if not admin
+  useEffect(() => {
+    if (!mounted) return;
+    
+    if (!user || user.role !== 'admin') {
+      router.replace('/admin-panel/login');
+      return;
+    }
+  }, [mounted, user, router]);
 
   // Don't render anything until mounted to prevent hydration mismatch
   if (!mounted) {
@@ -33,6 +45,18 @@ export default function AdminDashboard() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not admin (show loading while redirecting)
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting to login...</p>
         </div>
       </div>
     );
