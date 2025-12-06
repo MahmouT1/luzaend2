@@ -341,6 +341,8 @@ export const deleteProduct = async (req, res) => {
 // GET BESTSELLING PRODUCTS
 export const getBestsellingProducts = async (req, res) => {
   try {
+    console.log("📊 [Bestsellers] Starting to fetch bestsellers...");
+    
     // Get all paid orders
     const orders = await Order.find({
       $or: [
@@ -348,6 +350,8 @@ export const getBestsellingProducts = async (req, res) => {
         { orderStatus: { $in: ['Complete', 'Delivered', 'Confirmed', 'Shipped'] } }
       ]
     });
+
+    console.log(`📊 [Bestsellers] Found ${orders.length} paid orders`);
 
     // Calculate product sales statistics
     const productStats = {};
@@ -373,10 +377,14 @@ export const getBestsellingProducts = async (req, res) => {
       }
     });
 
+    console.log(`📊 [Bestsellers] Calculated stats for ${Object.keys(productStats).length} products`);
+
     // Sort products by total quantity sold (bestsellers)
     const sortedProductIds = Object.keys(productStats)
       .sort((a, b) => productStats[b].totalQuantity - productStats[a].totalQuantity)
       .slice(0, 20); // Get top 20 bestsellers
+
+    console.log(`📊 [Bestsellers] Top ${sortedProductIds.length} bestseller IDs:`, sortedProductIds.slice(0, 5));
 
     // Fetch full product details
     const bestsellerProducts = [];
@@ -390,24 +398,28 @@ export const getBestsellingProducts = async (req, res) => {
           bestsellerProducts.push(product);
         }
       } catch (err) {
-        console.log(`Product ${productId} not found, skipping...`);
+        console.log(`⚠️ [Bestsellers] Product ${productId} not found, skipping...`);
       }
     }
 
     // If no bestsellers found based on orders, return empty array or some default products
     if (bestsellerProducts.length === 0) {
+      console.log("📊 [Bestsellers] No bestsellers found, using fallback (recent products)");
       // Optionally: return products with highest ratings or most recent
       const fallbackProducts = await Product.find()
         .populate("category", "name")
         .sort({ createdAt: -1 })
         .limit(10);
       
+      console.log(`✅ [Bestsellers] Returning ${fallbackProducts.length} fallback products`);
       return res.status(200).json(fallbackProducts);
     }
 
+    console.log(`✅ [Bestsellers] Returning ${bestsellerProducts.length} bestseller products`);
     res.status(200).json(bestsellerProducts);
   } catch (error) {
-    console.log("product controller error (getBestsellingProducts) :", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("❌ [Bestsellers] Error:", error.message);
+    console.error("❌ [Bestsellers] Stack:", error.stack);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
