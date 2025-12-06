@@ -38,8 +38,15 @@ const ProfessionalLanding = () => {
         loop
         playsInline
         preload="auto"
-        className="absolute inset-0 w-full h-full object-cover z-[0]"
-        style={{ objectFit: 'cover' }}
+        className="absolute inset-0 w-full h-full z-[0] object-cover sm:object-cover md:object-cover"
+        style={{ 
+          objectFit: 'cover',
+          objectPosition: 'center center',
+          minWidth: '100%',
+          minHeight: '100%',
+          width: '100%',
+          height: '100%'
+        }}
       >
         <source src="/VIDEO ONE.mp4" type="video/mp4" />
         Your browser does not support the video tag.
