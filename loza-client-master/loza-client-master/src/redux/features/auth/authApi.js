@@ -27,6 +27,8 @@ export const authApi = apiSlice.injectEndpoints({
           if (result.data.user?._id) {
             dispatch(setUserId(result.data.user._id));
           }
+          
+          toast.success("Account created successfully!");
         } catch (error) {
           console.log(error.message);
         }

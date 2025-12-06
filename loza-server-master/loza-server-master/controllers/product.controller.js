@@ -1,5 +1,6 @@
 import { Category } from "../models/category.model.js";
 import { Product } from "../models/product.model.js";
+import { Order } from "../models/order.model.js";
 import { uploadProductImageService, updateProductImageService } from "../services/product.service.js";
 
 // CREATE PRODUCT
@@ -333,6 +334,80 @@ export const deleteProduct = async (req, res) => {
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {
     console.log("product controller error (deleteProduct) :", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// GET BESTSELLING PRODUCTS
+export const getBestsellingProducts = async (req, res) => {
+  try {
+    // Get all paid orders
+    const orders = await Order.find({
+      $or: [
+        { 'paymentMethod.status': 'paid' },
+        { orderStatus: { $in: ['Complete', 'Delivered', 'Confirmed', 'Shipped'] } }
+      ]
+    });
+
+    // Calculate product sales statistics
+    const productStats = {};
+    
+    orders.forEach(order => {
+      if (order.orderItems && Array.isArray(order.orderItems)) {
+        order.orderItems.forEach(item => {
+          // Use item.id as unique identifier (same as analytics controller)
+          const productId = item.id || item.productId || item._id;
+          
+          if (productId) {
+            if (!productStats[productId]) {
+              productStats[productId] = {
+                productId: productId,
+                totalQuantity: 0,
+                totalSales: 0
+              };
+            }
+            productStats[productId].totalQuantity += item.quantity || 1;
+            productStats[productId].totalSales += (item.price || 0) * (item.quantity || 1);
+          }
+        });
+      }
+    });
+
+    // Sort products by total quantity sold (bestsellers)
+    const sortedProductIds = Object.keys(productStats)
+      .sort((a, b) => productStats[b].totalQuantity - productStats[a].totalQuantity)
+      .slice(0, 20); // Get top 20 bestsellers
+
+    // Fetch full product details
+    const bestsellerProducts = [];
+    
+    for (const productId of sortedProductIds) {
+      try {
+        const product = await Product.findById(productId)
+          .populate("category", "name");
+        
+        if (product) {
+          bestsellerProducts.push(product);
+        }
+      } catch (err) {
+        console.log(`Product ${productId} not found, skipping...`);
+      }
+    }
+
+    // If no bestsellers found based on orders, return empty array or some default products
+    if (bestsellerProducts.length === 0) {
+      // Optionally: return products with highest ratings or most recent
+      const fallbackProducts = await Product.find()
+        .populate("category", "name")
+        .sort({ createdAt: -1 })
+        .limit(10);
+      
+      return res.status(200).json(fallbackProducts);
+    }
+
+    res.status(200).json(bestsellerProducts);
+  } catch (error) {
+    console.log("product controller error (getBestsellingProducts) :", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

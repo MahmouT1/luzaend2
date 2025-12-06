@@ -130,6 +130,20 @@ server {
     listen 80;
     server_name luzasculture.org www.luzasculture.org;
 
+    # NextAuth routes - must go to Next.js (before general /api route)
+    location /api/auth {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Other API routes - go to backend
     location /api {
         proxy_pass http://localhost:8000;
         proxy_http_version 1.1;
@@ -160,6 +174,19 @@ server {
     listen 80;
     server_name admin.luzasculture.org;
 
+    # NextAuth routes - must go to Next.js (before general /api route)
+    location /api/auth {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
     location /admin-panel {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -171,6 +198,7 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
+    # Other API routes - go to backend
     location /api {
         proxy_pass http://localhost:8000;
         proxy_http_version 1.1;

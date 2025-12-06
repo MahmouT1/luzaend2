@@ -7,6 +7,7 @@ import {
   updateProduct,
   deleteProduct,
   searchProducts,
+  getBestsellingProducts,
 } from "../controllers/product.controller.js";
 import { authorizeRoles } from "../middlewares/auth/authorizeRoles.js";
 import { isAuthenticated } from "../middlewares/auth/isAuthenticated.js";
@@ -27,6 +28,8 @@ productRouter.get("/get-products/:categoryName", getProductsByCategoryName);
 productRouter.get("/get-single-product/:id", getSingleProduct);
 
 productRouter.get("/search", searchProducts);
+
+productRouter.get("/get-bestsellers", getBestsellingProducts);
 
 productRouter.put(
   "/update-product/:id",

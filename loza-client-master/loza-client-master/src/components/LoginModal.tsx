@@ -7,10 +7,16 @@ import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, X } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
-import { useLoginMutation } from "@/redux/features/auth/authApi";
+import { useLoginMutation, useRegisterMutation } from "@/redux/features/auth/authApi";
 import { UserIcon } from "./icons/SimpleIcons";
 
-type FormData = {
+type LoginFormData = {
+  email: string;
+  password: string;
+};
+
+type RegisterFormData = {
+  name: string;
   email: string;
   password: string;
 };
@@ -24,21 +30,38 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [login] = useLoginMutation();
+  const [register] = useRegisterMutation();
   
+  // Login Form
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormData>({
+    register: registerLogin,
+    handleSubmit: handleSubmitLogin,
+    formState: { errors: errorsLogin },
+    reset: resetLogin,
+  } = useForm<LoginFormData>({
     defaultValues: {
       email: "",
       password: ""
     }
   });
 
-  const onSubmit = async (data: FormData) => {
+  // Register Form
+  const {
+    register: registerRegister,
+    handleSubmit: handleSubmitRegister,
+    formState: { errors: errorsRegister },
+    reset: resetRegister,
+  } = useForm<RegisterFormData>({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: ""
+    }
+  });
+
+  const onLoginSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
       const result = await login({
@@ -48,9 +71,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
       if (result && result.user) {
         toast.success("Login successful!");
-        reset();
+        resetLogin();
         onClose();
-        // Refresh the page to update user state
         router.refresh();
       }
     } catch (error: any) {
@@ -60,6 +82,41 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onRegisterSubmit = async (data: RegisterFormData) => {
+    setIsLoading(true);
+    try {
+      const result = await register({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      }).unwrap();
+
+      if (result && result.user) {
+        resetRegister();
+        setIsRegisterMode(false);
+        onClose();
+        // Auto login after registration - toast is shown in authApi
+        router.refresh();
+      }
+    } catch (error: any) {
+      console.error("Register error:", error);
+      const errorMessage = error?.data?.message || error?.message || 'Registration failed';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const switchToRegister = () => {
+    resetLogin();
+    setIsRegisterMode(true);
+  };
+
+  const switchToLogin = () => {
+    resetRegister();
+    setIsRegisterMode(false);
   };
 
   const handleGoogleSignIn = async () => {
@@ -86,7 +143,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   };
 
   const handleClose = () => {
-    reset();
+    resetLogin();
+    resetRegister();
+    setIsRegisterMode(false);
     onClose();
   };
 
@@ -128,7 +187,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
               <UserIcon size={20} className="text-gray-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">Login</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {isRegisterMode ? 'Sign up' : 'Login'}
+            </h2>
           </div>
           <button
             onClick={handleClose}
@@ -142,31 +203,39 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         {/* Content */}
         <div className="p-6">
           <p className="text-sm text-gray-600 mb-6">
-            Enter your email and password to access your account
+            {isRegisterMode 
+              ? 'Create your account to get started' 
+              : 'Enter your email and password to access your account'}
           </p>
 
-          {/* Google Sign In Button */}
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 bg-white text-gray-900 py-3 px-4 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-5"
-          >
-            <FcGoogle className="w-5 h-5" />
-            <span>Continue with Google</span>
-          </button>
+          {/* Google Sign In Button - Only show in Login mode */}
+          {!isRegisterMode && (
+            <>
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 bg-white text-gray-900 py-3 px-4 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-5"
+              >
+                <FcGoogle className="w-5 h-5" />
+                <span>Continue with Google</span>
+              </button>
 
-          {/* Divider */}
-          <div className="relative mb-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-white text-gray-500">or</span>
-            </div>
-          </div>
+              {/* Divider */}
+              <div className="relative mb-5">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-3 bg-white text-gray-500">or</span>
+                </div>
+              </div>
+            </>
+          )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          {/* Login Form */}
+          {!isRegisterMode ? (
+            <form onSubmit={handleSubmitLogin(onLoginSubmit)} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email
@@ -174,7 +243,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               <input
                 id="email"
                 type="email"
-                {...register("email", { 
+                {...registerLogin("email", { 
                   required: "Email is required",
                   pattern: {
                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -185,8 +254,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 placeholder="Enter your email"
                 disabled={isLoading}
               />
-              {errors?.email && (
-                <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
+              {errorsLogin?.email && (
+                <p className="mt-1 text-sm text-red-500">{errorsLogin.email.message}</p>
               )}
             </div>
 
@@ -207,7 +276,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  {...register("password", { 
+                  {...registerLogin("password", { 
                     required: "Password is required",
                     minLength: {
                       value: 6,
@@ -227,8 +296,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              {errors?.password && (
-                <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
+              {errorsLogin?.password && (
+                <p className="mt-1 text-sm text-red-500">{errorsLogin.password.message}</p>
               )}
             </div>
 
@@ -261,33 +330,139 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </span>
             </button>
           </form>
+          ) : (
+            /* Register Form */
+            <form onSubmit={handleSubmitRegister(onRegisterSubmit)} className="space-y-5">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  {...registerRegister("name", { required: "Name is required" })}
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+                  placeholder="Enter your name"
+                  disabled={isLoading}
+                />
+                {errorsRegister?.name && (
+                  <p className="mt-1 text-sm text-red-500">{errorsRegister.name.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  id="register-email"
+                  type="email"
+                  {...registerRegister("email", { 
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: "Invalid email address"
+                    }
+                  })}
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+                  placeholder="Enter your email"
+                  disabled={isLoading}
+                />
+                {errorsRegister?.email && (
+                  <p className="mt-1 text-sm text-red-500">{errorsRegister.email.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="register-password"
+                    type={showPassword ? "text" : "password"}
+                    {...registerRegister("password", { 
+                      required: "Password is required",
+                      minLength: {
+                        value: 6,
+                        message: "Password must be at least 6 characters"
+                      }
+                    })}
+                    className="w-full px-4 py-3 pr-10 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+                    placeholder="Enter your password"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errorsRegister?.password && (
+                  <p className="mt-1 text-sm text-red-500">{errorsRegister.password.message}</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-black py-3 px-4 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ color: '#FFFFFF' }}
+              >
+                <span 
+                  className="font-bold text-base" 
+                  style={{ 
+                    color: '#FFFFFF',
+                    fontWeight: 600,
+                    textShadow: 'none'
+                  }}
+                >
+                  {isLoading ? 'Creating account...' : 'Register'}
+                </span>
+              </button>
+            </form>
+          )}
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+            {isRegisterMode ? (
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <button
+                  onClick={switchToLogin}
+                  className="font-medium text-black hover:underline"
+                >
+                  Sign in
+                </button>
+              </p>
+            ) : (
+              <p className="text-sm text-gray-600">
+                Don't have an account?{' '}
+                <button
+                  onClick={switchToRegister}
+                  className="font-medium text-black hover:underline"
+                >
+                  Sign up
+                </button>
+              </p>
+            )}
+          </div>
+
+          {!isRegisterMode && (
+            <div className="mt-4 text-center">
               <button
                 onClick={() => {
                   handleClose();
-                  router.push('/register');
+                  router.push('/forgot-password');
                 }}
-                className="font-medium text-black hover:underline"
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Sign up
+                Forgot password?
               </button>
-            </p>
-          </div>
-
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => {
-                handleClose();
-                router.push('/forgot-password');
-              }}
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Forgot password?
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
