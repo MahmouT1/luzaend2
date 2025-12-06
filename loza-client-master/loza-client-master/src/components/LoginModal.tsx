@@ -109,12 +109,18 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   };
 
-  const switchToRegister = () => {
+  const switchToRegister = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("🔄 Switching to Register mode");
     resetLogin();
     setIsRegisterMode(true);
   };
 
-  const switchToLogin = () => {
+  const switchToLogin = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("🔄 Switching to Login mode");
     resetRegister();
     setIsRegisterMode(false);
   };
@@ -431,6 +437,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
                 <button
+                  type="button"
                   onClick={switchToLogin}
                   className="font-medium text-black hover:underline"
                 >
@@ -441,6 +448,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               <p className="text-sm text-gray-600">
                 Don't have an account?{' '}
                 <button
+                  type="button"
                   onClick={switchToRegister}
                   className="font-medium text-black hover:underline"
                 >
