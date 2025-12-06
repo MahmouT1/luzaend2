@@ -109,12 +109,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   };
 
-  const switchToRegister = (e: React.MouseEvent) => {
+  const switchToRegister = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
     console.log("🔄 Switching to Register mode");
     resetLogin();
     setIsRegisterMode(true);
+    return false;
   };
 
   const switchToLogin = (e: React.MouseEvent) => {
@@ -449,7 +451,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 Don't have an account?{' '}
                 <button
                   type="button"
-                  onClick={switchToRegister}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    switchToRegister(e);
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                  }}
                   className="font-medium text-black hover:underline"
                 >
                   Sign up
