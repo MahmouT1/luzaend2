@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { Package, Calendar, DollarSign, Loader2, LogIn } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
@@ -8,10 +8,12 @@ import { useGetUserOrdersQuery } from "@/redux/features/orders/orderApi";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import LoginModal from "@/components/LoginModal";
 
 export default function PurchasesPage() {
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { data: ordersData, isLoading, error, refetch } = useGetUserOrdersQuery(undefined, {
     skip: !user?._id, // Skip if user is not logged in
     refetchOnMountOrArgChange: true,
@@ -120,13 +122,13 @@ export default function PurchasesPage() {
             <p className="text-gray-600 mb-6">
               You need to be logged in to view your purchase history.
             </p>
-            <Link
-              href="/login?callbackUrl=/profile/purchases"
+            <button
+              onClick={() => setIsLoginModalOpen(true)}
               className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <LogIn size={20} />
               <span>Log In</span>
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -230,13 +232,13 @@ export default function PurchasesPage() {
                 Retry
               </button>
               {!user?._id && (
-                <Link
-                  href="/login?callbackUrl=/profile/purchases"
+                <button
+                  onClick={() => setIsLoginModalOpen(true)}
                   className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
                 >
                   <LogIn size={20} />
                   <span>Log In</span>
-                </Link>
+                </button>
               )}
             </div>
           </div>
@@ -383,6 +385,10 @@ export default function PurchasesPage() {
           )}
         </div>
       </div>
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+      />
     </div>
   );
 }

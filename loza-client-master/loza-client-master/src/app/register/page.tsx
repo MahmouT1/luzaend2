@@ -7,8 +7,8 @@ export default function RegisterRedirect() {
   const router = useRouter();
   
   useEffect(() => {
-    // Redirect to login page immediately
-    router.replace("/login");
+    // Redirect to home page - login is handled by modal only
+    router.replace("/");
   }, [router]);
   
   return null;

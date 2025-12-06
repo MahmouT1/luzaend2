@@ -99,7 +99,7 @@ export default function SimpleLoginPage() {
 
         <div className="mt-6 text-center">
           <a
-            href="/login"
+            href="/"
             className="text-white/70 hover:text-white text-sm underline"
           >
             Back to original login page
