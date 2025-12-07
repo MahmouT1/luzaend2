@@ -14,6 +14,8 @@ const authOptions: AuthOptions = {
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET || "fallback-secret",
+  // Ensure proper URL and cookies for mobile
+  useSecureCookies: process.env.NEXTAUTH_URL?.startsWith('https://') ?? true,
   callbacks: {
     async signIn({ user, account, profile }) {
       console.log("🔐 NextAuth signIn callback:", { user, account, profile });

@@ -133,10 +133,19 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Use absolute URL for callback to ensure it works on server
+      // Use current origin for callback to work on both desktop and mobile
       const callbackUrl = typeof window !== 'undefined' 
         ? window.location.origin + '/' 
-        : '/';
+        : process.env.NEXT_PUBLIC_NEXTAUTH_URL || 'https://luzasculture.org';
+      
+      console.log("🔐 Starting Google Sign In, callbackUrl:", callbackUrl);
+      
+      // For mobile, use window.location.href for better compatibility
+      if (typeof window !== 'undefined') {
+        const signInUrl = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+        window.location.href = signInUrl;
+        return;
+      }
       
       const result = await signIn("google", { 
         callbackUrl: callbackUrl,
