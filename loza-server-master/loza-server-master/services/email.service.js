@@ -91,7 +91,12 @@ const createOrderConfirmationEmail = (order, customerEmail) => {
 
   // Calculate amounts safely
   const subtotal = order.subtotal || order.totalPrice || 0;
-  const deliveryFee = order.deliveryFee || 0; // Use order.deliveryFee, default to 0 if not provided
+  // Only use deliveryFee if it's not the old value 85 (use new value 150 instead)
+  let deliveryFee = order.deliveryFee || 0;
+  // If deliveryFee is 85 (old value), treat it as 0 to hide it from email
+  if (deliveryFee === 85) {
+    deliveryFee = 0;
+  }
   const pointsUsed = order.pointsUsed || 0;
   const totalPrice = order.totalPrice || order.finalAmount || subtotal;
   // totalPrice already includes deliveryFee, so don't add it again
@@ -632,7 +637,12 @@ const createStoreOwnerNotificationEmail = (order) => {
 
   // Calculate amounts safely
   const subtotal = order.subtotal || order.totalPrice || 0;
-  const deliveryFee = order.deliveryFee || 0; // Use order.deliveryFee, default to 0 if not provided
+  // Only use deliveryFee if it's not the old value 85 (use new value 150 instead)
+  let deliveryFee = order.deliveryFee || 0;
+  // If deliveryFee is 85 (old value), treat it as 0 to hide it from email
+  if (deliveryFee === 85) {
+    deliveryFee = 0;
+  }
   const pointsUsed = order.pointsUsed || 0;
   const pointsDiscount = order.pointsDiscount || 0;
   const totalPrice = order.totalPrice || order.finalAmount || subtotal;
