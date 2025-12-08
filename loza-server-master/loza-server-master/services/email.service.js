@@ -91,10 +91,11 @@ const createOrderConfirmationEmail = (order, customerEmail) => {
 
   // Calculate amounts safely
   const subtotal = order.subtotal || order.totalPrice || 0;
-  const deliveryFee = order.deliveryFee || 85;
+  const deliveryFee = order.deliveryFee || 0; // Use order.deliveryFee, default to 0 if not provided
   const pointsUsed = order.pointsUsed || 0;
   const totalPrice = order.totalPrice || order.finalAmount || subtotal;
-  const totalPaid = totalPrice + deliveryFee - pointsUsed;
+  // totalPrice already includes deliveryFee, so don't add it again
+  const totalPaid = totalPrice - pointsUsed;
 
   return {
     from: `"LUZA'S CULTURE" <${process.env.EMAIL_USER || 'orders@luzasculture.org'}>`,
@@ -418,10 +419,12 @@ const createOrderConfirmationEmail = (order, customerEmail) => {
                   <span class="total-label">Subtotal</span>
                   <span class="total-value">${subtotal} EGP</span>
                 </div>
-                <div class="total-row">
-                  <span class="total-label">Delivery Fee</span>
-                  <span class="total-value">${deliveryFee} EGP</span>
-                </div>
+                ${deliveryFee > 0 ? `
+                  <div class="total-row">
+                    <span class="total-label">Delivery Fee</span>
+                    <span class="total-value">${deliveryFee} EGP</span>
+                  </div>
+                ` : ''}
                 ${pointsUsed > 0 ? `
                   <div class="total-row">
                     <span class="total-label">Points Used</span>
@@ -629,11 +632,12 @@ const createStoreOwnerNotificationEmail = (order) => {
 
   // Calculate amounts safely
   const subtotal = order.subtotal || order.totalPrice || 0;
-  const deliveryFee = order.deliveryFee || 85;
+  const deliveryFee = order.deliveryFee || 0; // Use order.deliveryFee, default to 0 if not provided
   const pointsUsed = order.pointsUsed || 0;
   const pointsDiscount = order.pointsDiscount || 0;
   const totalPrice = order.totalPrice || order.finalAmount || subtotal;
-  const finalAmount = order.finalAmount || (totalPrice + deliveryFee - pointsUsed);
+  // totalPrice already includes deliveryFee, so don't add it again
+  const finalAmount = order.finalAmount || (totalPrice - pointsUsed);
 
   // Format order items
   const orderItemsList = (order.orderItems || []).map(item => {

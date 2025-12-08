@@ -36,23 +36,18 @@ export const createOrder = async (req, res) => {
       totalPrice = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     }
 
-    // Add delivery fee for cash on delivery and points + cash on delivery
-    const DELIVERY_FEE = 85;
-    if (paymentMethod && (paymentMethod.type === 'cash_on_delivery' || paymentMethod.type === 'points_cash_on_delivery')) {
-      totalPrice += DELIVERY_FEE;
-    }
+    // Use deliveryFee from request body (sent from checkout page)
+    // Do NOT add delivery fee automatically - it's already included in totalPrice from frontend
+    const deliveryFee = req.body.deliveryFee || 0;
 
     // create order with delivery fee information
     const orderData = {
       ...req.body,
-      totalPrice,
+      totalPrice, // totalPrice already includes deliveryFee from frontend
     };
 
-    // Add delivery fee to order data for reference
-    if (paymentMethod && (paymentMethod.type === 'cash_on_delivery' || paymentMethod.type === 'points_cash_on_delivery')) {
-      orderData.deliveryFee = DELIVERY_FEE;
-      orderData.subtotal = totalPrice - DELIVERY_FEE;
-    }
+    // Add delivery fee to order data for reference (use the value from request)
+    orderData.deliveryFee = deliveryFee;
 
     // Generate order number
     const lastOrder = await Order.findOne().sort({ orderNumber: -1 });
