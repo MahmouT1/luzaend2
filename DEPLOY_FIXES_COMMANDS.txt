@@ -1,0 +1,26 @@
+# أوامر تطبيق التعديلات على السيرفر
+
+# 1. الانتقال لمجلد المشروع
+cd /root/var/www/luzasculture/loza-client-master/loza-client-master
+
+# 2. جلب التعديلات من GitHub
+git pull luzaend2 main
+
+# 3. إعادة بناء المشروع
+npm run build
+
+# 4. إيقاف العملية الحالية (إذا كانت تعمل)
+lsof -ti :3000 | xargs kill -9 2>/dev/null
+pkill -9 -f "next-server" 2>/dev/null
+sleep 3
+
+# 5. إعادة تشغيل التطبيق
+cd /root/var/www/luzasculture/loza-client-master/loza-client-master
+nohup npm run start > /tmp/loza-client.log 2>&1 &
+
+# 6. التحقق من الحالة
+sleep 5
+lsof -i :3000
+curl -I http://localhost:3000 2>/dev/null | head -3
+
+

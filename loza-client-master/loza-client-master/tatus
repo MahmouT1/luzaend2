@@ -1,0 +1,10 @@
+[33m915c799[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fix videos: Use Cloudinary mediaUrls instead of direct paths
+[33m2388bca[m[33m ([m[1;31mluzaend2/main[m[33m)[m Add server code and fix discounted price in cart
+[33m32c16ef[m Add discount price display, hide credit card, update email config
+[33m3aa21e4[m Remove Credit/Debit Card references from checkout
+[33mb579d39[m Fix cart price display to show discounted price, hide Credit/Debit Card option in checkout
+[33m3fd19e1[m Add links to Our Collection section and horizontal scroll on mobile
+[33me8aee2d[m Fix Google Sign In for mobile devices
+[33maf941bd[m Fix LoginModal TypeScript error
+[33m094e849[m Remove /login page route - keep only LoginModal from profile icon
+[33mfbb1376[m Initial commit: Add frontend code

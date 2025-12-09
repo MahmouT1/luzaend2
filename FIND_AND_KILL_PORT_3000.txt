@@ -1,0 +1,40 @@
+# أوامر إيجاد وإيقاف العملية على المنفذ 3000
+
+# 1. البحث الشامل عن العملية
+echo "=== 1. البحث عن العملية على المنفذ 3000 ===" && \
+lsof -i :3000 && \
+ss -tlnp | grep :3000 && \
+netstat -tlnp 2>/dev/null | grep :3000 && \
+ps aux | grep -E "next|node.*3000" | grep -v grep
+
+# 2. إيقاف جميع العمليات بقوة
+echo "" && \
+echo "=== 2. إيقاف جميع العمليات ===" && \
+lsof -ti :3000 | xargs -r kill -9 2>/dev/null; \
+fuser -k 3000/tcp 2>/dev/null; \
+pkill -9 -f "next-server" 2>/dev/null; \
+pkill -9 -f "next start" 2>/dev/null; \
+pkill -9 -f "node.*3000" 2>/dev/null; \
+killall -9 node 2>/dev/null; \
+pkill -9 -u root -f "next" 2>/dev/null; \
+pkill -9 -u luzauser -f "next" 2>/dev/null; \
+sleep 5
+
+# 3. التحقق من أن المنفذ خالي
+echo "" && \
+echo "=== 3. التحقق من أن المنفذ خالي ===" && \
+lsof -i :3000 || echo "✅ المنفذ 3000 خالي تماماً"
+
+# 4. إعادة التشغيل
+echo "" && \
+echo "=== 4. إعادة التشغيل ===" && \
+cd /root/var/www/luzasculture/loza-client-master/loza-client-master && \
+rm -f /tmp/loza-client.log && \
+nohup npm run start > /tmp/loza-client.log 2>&1 & \
+sleep 15 && \
+echo "" && \
+echo "=== 5. التحقق من التشغيل ===" && \
+lsof -i :3000 && \
+tail -30 /tmp/loza-client.log
+
+

@@ -1,0 +1,31 @@
+# أوامر تشخيص وإصلاح مشكلة التشغيل
+
+# 1. التحقق من ملف الـ log
+echo "=== 1. محتوى ملف الـ log ===" && \
+cat /tmp/loza-client.log
+
+# 2. التحقق من وجود البناء
+echo "" && \
+echo "=== 2. التحقق من البناء ===" && \
+cd /root/var/www/luzasculture/loza-client-master/loza-client-master && \
+ls -la .next/BUILD_ID 2>/dev/null && \
+echo "✅ البناء موجود"
+
+# 3. محاولة تشغيل يدوي لمعرفة الخطأ
+echo "" && \
+echo "=== 3. محاولة تشغيل يدوي ===" && \
+cd /root/var/www/luzasculture/loza-client-master/loza-client-master && \
+timeout 15 npm run start 2>&1 | head -50 || echo "تم إيقاف التشغيل"
+
+# 4. إذا نجح التشغيل اليدوي، إعادة التشغيل في الخلفية
+echo "" && \
+echo "=== 4. إعادة التشغيل في الخلفية ===" && \
+cd /root/var/www/luzasculture/loza-client-master/loza-client-master && \
+nohup npm run start > /tmp/loza-client.log 2>&1 & \
+sleep 10 && \
+echo "" && \
+echo "=== 5. التحقق من التشغيل ===" && \
+lsof -i :3000 && \
+tail -30 /tmp/loza-client.log
+
+

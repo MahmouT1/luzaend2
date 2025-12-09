@@ -128,7 +128,7 @@ sudo ./fix-email-server.sh
 ### أو يدوياً - إنشاء ملف .env:
 
 ```bash
-cd /var/www/luzasculture/loza-server-master/loza-server-master
+ /var/www/luzasculture/loza-server-master/loza-server-master
 nano .env
 ```
 

@@ -10,7 +10,7 @@
  * 3. Use the helper functions from @/lib/cloudinary to generate URLs
  */
 
-import { getCloudinaryImageUrl, getCloudinaryVideoUrl } from '@/lib/cloudinary';
+import { getCloudinaryImageUrl, getCloudinaryVideoUrl } from '@/lib/cloudinary-client';
 
 /**
  * Fallback URLs - These are the current local files

@@ -1,0 +1,36 @@
+# أوامر إصلاح مشكلة المنفذ 3000
+
+# 1. البحث عن العملية التي تستخدم المنفذ 3000 بطرق مختلفة
+echo "=== البحث عن العملية على المنفذ 3000 ===" && \
+lsof -i :3000 && \
+echo "" && \
+ss -tlnp | grep :3000 && \
+echo "" && \
+netstat -tlnp | grep :3000 && \
+echo "" && \
+ps aux | grep -E "next|node.*3000" | grep -v grep
+
+# 2. إيقاف جميع العمليات على المنفذ 3000
+lsof -ti :3000 | xargs kill -9 2>/dev/null
+fuser -k 3000/tcp 2>/dev/null
+pkill -9 -f "next-server" 2>/dev/null
+pkill -9 -f "next start" 2>/dev/null
+pkill -9 -f "node.*3000" 2>/dev/null
+sleep 3
+
+# 3. التحقق من أن المنفذ خالي
+echo "=== التحقق من أن المنفذ خالي ===" && \
+lsof -i :3000 && \
+echo "المنفذ خالي الآن" || echo "لا توجد عمليات على المنفذ 3000"
+
+# 4. إعادة تشغيل التطبيق
+cd /root/var/www/luzasculture/loza-client-master/loza-client-master && \
+nohup npm run start > /tmp/loza-client.log 2>&1 & \
+sleep 10 && \
+echo "" && \
+echo "=== التحقق من التشغيل ===" && \
+lsof -i :3000 && \
+echo "" && \
+tail -20 /tmp/loza-client.log
+
+

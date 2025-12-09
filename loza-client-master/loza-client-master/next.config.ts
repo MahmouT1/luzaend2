@@ -36,6 +36,19 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  webpack: (config, { isServer }) => {
+    // Ignore fs module in client-side code
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        stream: false,
+        crypto: false,
+      };
+    }
+    return config;
+  },
   // experimental: {
   //   optimizeCss: true, // Disabled due to critters dependency issue
   // },

@@ -1,0 +1,26 @@
+# أوامر إيقاف العملية من luzauser وإعادة التشغيل
+
+# 1. إيقاف العملية مباشرة باستخدام PID
+kill -9 884899 884898 2>/dev/null
+
+# 2. إيقاف جميع عمليات next من luzauser
+pkill -9 -u luzauser -f "next-server"
+pkill -9 -u luzauser -f "next start"
+pkill -9 -u luzauser -f "node"
+
+# 3. الانتظار والتأكد
+sleep 3
+lsof -i :3000
+
+# 4. إذا لم تنجح، استخدام sudo (إذا كان متاحاً)
+# sudo kill -9 884899
+# sudo pkill -9 -u luzauser -f "next"
+
+# 5. إعادة التشغيل من root
+cd /root/var/www/luzasculture/loza-client-master/loza-client-master
+nohup npm run start > /tmp/loza-client.log 2>&1 &
+sleep 10
+lsof -i :3000
+tail -20 /tmp/loza-client.log
+
+

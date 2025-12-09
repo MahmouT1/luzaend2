@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useGetProductsByCategoryQuery } from "@/redux/features/products/productApi";
+import { mediaUrls } from "@/config/mediaUrls";
 
 const ProfessionalLanding = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -48,7 +49,7 @@ const ProfessionalLanding = () => {
           height: '100%'
         }}
       >
-        <source src="/VIDEO ONE.mp4" type="video/mp4" />
+        <source src={mediaUrls.videoOne} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
       

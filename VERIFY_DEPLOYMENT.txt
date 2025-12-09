@@ -1,0 +1,21 @@
+# أوامر التحقق من التطبيق بعد البناء
+
+# 1. التحقق من المنفذ 3000
+lsof -i :3000
+
+# 2. عرض آخر 30 سطر من الـ logs
+tail -30 /tmp/loza-client.log
+
+# 3. اختبار الموقع محلياً
+curl -I http://localhost:3000 2>/dev/null | head -5
+
+# 4. التحقق من الأخطاء في الـ logs
+grep -i error /tmp/loza-client.log | tail -10
+
+# 5. إذا لم يعمل، إعادة التشغيل
+# lsof -ti :3000 | xargs kill -9 2>/dev/null
+# sleep 2
+# cd /root/var/www/luzasculture/loza-client-master/loza-client-master
+# nohup npm run start > /tmp/loza-client.log 2>&1 &
+
+

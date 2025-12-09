@@ -126,7 +126,7 @@ export default function CheckoutPage() {
   // Calculate total points available from products based on payment method
   const calculatePointsByPaymentMethod = (paymentType: string) => {
     if (!paymentType) {
-      // Default to Instapay/Credit points if no payment method selected
+      // Default to Instapay points if no payment method selected
       return cartItems.reduce((sum: number, item: any) => {
         return sum + (item.points || 0) * item.quantity;
       }, 0);
@@ -145,7 +145,7 @@ export default function CheckoutPage() {
         }
         return sum + calculatedPoints;
       } else {
-        // Instapay, Credit/Debit Card - use points
+        // Instapay - use points
         const pointsValue = (item.points !== undefined && item.points !== null) ? item.points : 0;
         const calculatedPoints = pointsValue * (item.quantity || 1);
         return sum + calculatedPoints;
@@ -653,7 +653,8 @@ export default function CheckoutPage() {
                   </div>
                   
                   <div className="space-y-4">
-                    <div className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-all duration-200">
+                    {/* Credit/Debit Card option - Hidden until enabled */}
+                    {/* <div className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-all duration-200">
                       <div className="flex items-start">
                         <input
                           type="radio"
@@ -666,7 +667,7 @@ export default function CheckoutPage() {
                           <label className="font-medium text-gray-900">Credit/Debit Card</label>
                         </div>
                       </div>
-                    </div>
+                    </div> */}
                     
                     <div className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-all duration-200">
                                           <div className="flex items-start">
@@ -907,9 +908,19 @@ export default function CheckoutPage() {
                           return null;
                         })()}
                       </div>
-                      <p className="font-price-bold text-gray-900 text-right">
-                        {formatPrice(item.price * item.quantity)}
-                      </p>
+                      <div className="text-right">
+                        {(() => {
+                          // Use discountPrice if available and valid, otherwise use price
+                          const displayPrice = (item.discountPrice && item.discountPrice > 0 && item.discountPrice < item.price) 
+                            ? item.discountPrice 
+                            : item.price;
+                          return (
+                            <p className="font-price-bold text-gray-900">
+                              {formatPrice(displayPrice * item.quantity)}
+                            </p>
+                          );
+                        })()}
+                      </div>
                     </div>
                     );
                   })}
@@ -951,9 +962,9 @@ export default function CheckoutPage() {
                             (Cash on Delivery points)
                           </span>
                         )}
-                        {(form.paymentMethod === "Instapay" || form.paymentMethod === "Credit/Debit Card") && (
+                        {form.paymentMethod === "Instapay" && (
                           <span className="block mt-1 text-blue-700 font-medium">
-                            (Instapay/Credit/Debit points)
+                            (Instapay points)
                           </span>
                         )}
                       </div>

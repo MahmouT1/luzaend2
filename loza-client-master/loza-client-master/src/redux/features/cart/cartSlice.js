@@ -170,12 +170,28 @@ const cartSlice = createSlice({
         if (product.pointsCash !== undefined) {
           state.cartItems[existingProductIndex].pointsCash = product.pointsCash;
         }
+        // Update price if discountPrice is available and valid
+        const actualPrice = (product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price) 
+          ? product.discountPrice 
+          : product.price;
+        state.cartItems[existingProductIndex].price = actualPrice;
+        // Store original price if not already stored
+        if (!state.cartItems[existingProductIndex].originalPrice) {
+          state.cartItems[existingProductIndex].originalPrice = product.price;
+        }
       }
       // IF PRODUCT NOT IN CART
       else {
+        // Calculate the actual price to use (discountPrice if available and valid, otherwise price)
+        const actualPrice = (product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price) 
+          ? product.discountPrice 
+          : product.price;
+        
         // Ensure product has points fields, default to 0 if not present
         const newProduct = { 
           ...product, 
+          price: actualPrice, // Use discounted price if available
+          originalPrice: product.price, // Store original price for display
           quantity, 
           size,
           points: product.points || 0,

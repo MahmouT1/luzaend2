@@ -1,0 +1,42 @@
+# أوامر قوية لإيقاف عمليات luzauser والتحقق من سبب إعادة التشغيل
+
+# 1. إيقاف جميع عمليات luzauser بقوة
+echo "=== إيقاف جميع عمليات luzauser ===" && \
+kill -9 885393 885420 885421 2>/dev/null; \
+pkill -9 -u luzauser -f "next" 2>/dev/null; \
+pkill -9 -u luzauser -f "node" 2>/dev/null; \
+pkill -9 -u luzauser 2>/dev/null; \
+sleep 3
+
+# 2. التحقق من PM2 لـ luzauser
+echo "" && \
+echo "=== التحقق من PM2 لـ luzauser ===" && \
+sudo -u luzauser pm2 list 2>/dev/null || echo "PM2 غير موجود لـ luzauser"; \
+sudo -u luzauser pm2 delete all 2>/dev/null; \
+sudo -u luzauser pm2 kill 2>/dev/null; \
+sleep 2
+
+# 3. التحقق من ملفات startup scripts
+echo "" && \
+echo "=== التحقق من startup scripts ===" && \
+ls -la /home/luzauser/.bashrc 2>/dev/null | grep -E "next|loza" || echo "لا يوجد في .bashrc"; \
+ls -la /home/luzauser/.profile 2>/dev/null | grep -E "next|loza" || echo "لا يوجد في .profile"; \
+find /home/luzauser -name "*.sh" -type f 2>/dev/null | head -5
+
+# 4. التحقق النهائي
+echo "" && \
+echo "=== التحقق النهائي ===" && \
+lsof -i :3000 || echo "✅ 3000 خالي"; \
+lsof -i :8000 || echo "✅ 8000 خالي"; \
+ps aux | grep -E "next|node.*loza" | grep -v grep || echo "✅ لا عمليات"
+
+# 5. تشغيل من مسار واحد فقط (تصحيح: npm run start)
+echo "" && \
+echo "=== التشغيل من المسار الوحيد ===" && \
+cd /root/var/www/luzasculture/loza-client-master/loza-client-master && \
+nohup npm run start > /tmp/loza-client.log 2>&1 & \
+sleep 10 && \
+lsof -i :3000 && \
+tail -30 /tmp/loza-client.log
+
+

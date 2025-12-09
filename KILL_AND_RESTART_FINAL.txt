@@ -1,0 +1,34 @@
+# أوامر إيقاف العملية وإعادة التشغيل
+
+# 1. إيقاف العملية على المنفذ 3000
+echo "=== 1. إيقاف العملية ===" && \
+kill -9 885667 2>/dev/null; \
+lsof -ti :3000 | xargs -r kill -9 2>/dev/null; \
+fuser -k 3000/tcp 2>/dev/null; \
+pkill -9 -f "next-server" 2>/dev/null; \
+pkill -9 -f "next start" 2>/dev/null; \
+sleep 3
+
+# 2. التحقق من أن المنفذ خالي
+echo "" && \
+echo "=== 2. التحقق من أن المنفذ خالي ===" && \
+lsof -i :3000 || echo "✅ المنفذ 3000 خالي"
+
+# 3. إعادة التشغيل
+echo "" && \
+echo "=== 3. إعادة التشغيل ===" && \
+cd /root/var/www/luzasculture/loza-client-master/loza-client-master && \
+rm -f /tmp/loza-client.log nohup.out && \
+nohup npm run start > /tmp/loza-client.log 2>&1 & \
+sleep 15
+
+# 4. التحقق من التشغيل
+echo "" && \
+echo "=== 4. التحقق من التشغيل ===" && \
+lsof -i :3000 && \
+echo "" && \
+tail -30 /tmp/loza-client.log && \
+echo "" && \
+curl -I http://localhost:3000 2>/dev/null | head -3
+
+

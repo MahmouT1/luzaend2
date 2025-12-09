@@ -27,7 +27,13 @@ export default function CartPage() {
 
   // Don't calculate totals until mounted
   const total = mounted ? cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => {
+      // Use discountPrice if available and valid, otherwise use price
+      const itemPrice = (item.discountPrice && item.discountPrice > 0 && item.discountPrice < item.price) 
+        ? item.discountPrice 
+        : item.price;
+      return sum + itemPrice * item.quantity;
+    },
     0
   ) : 0;
   const shipping = mounted ? (total > 100 ? 0 : 10) : 0;
@@ -201,12 +207,28 @@ export default function CartPage() {
                             </div>
 
                             <div className="text-right">
-                              <p className="text-2xl font-price-bold text-gray-900">
-                                {formatPrice(item.price * item.quantity)}
-                              </p>
-                              <p className="text-sm font-price text-gray-500">
-                                {formatPrice(item.price)} each
-                              </p>
+                              {(() => {
+                                // Use discountPrice if available and valid, otherwise use price
+                                const itemPrice = (item.discountPrice && item.discountPrice > 0 && item.discountPrice < item.price) 
+                                  ? item.discountPrice 
+                                  : item.price;
+                                const hasDiscount = item.discountPrice && item.discountPrice > 0 && item.discountPrice < item.price;
+                                return (
+                                  <>
+                                    <p className="text-2xl font-price-bold text-gray-900">
+                                      {formatPrice(itemPrice * item.quantity)}
+                                    </p>
+                                    {hasDiscount && (
+                                      <p className="text-sm font-price text-gray-500 line-through">
+                                        {formatPrice(item.price * item.quantity)}
+                                      </p>
+                                    )}
+                                    <p className="text-sm font-price text-gray-500">
+                                      {formatPrice(itemPrice)} each
+                                    </p>
+                                  </>
+                                );
+                              })()}
                             </div>
                           </div>
                         </div>

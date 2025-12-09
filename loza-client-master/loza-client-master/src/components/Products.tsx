@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import StarRating from "./StarRating";
+import { mediaUrls } from "@/config/mediaUrls";
 
 // Product Card Component with Hover Effect
 const ProductCard = ({ 
@@ -170,7 +171,7 @@ const Products = ({ name }: any) => {
           playsInline
           preload="none"
           className="absolute w-full h-full object-cover opacity-70"
-          src="/header.mp4"
+          src={mediaUrls.headerVideo}
         />
         <div className="absolute inset-0 bg-black/30" />
         <div className="relative z-10 h-full flex items-center justify-center px-4">
