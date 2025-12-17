@@ -90,11 +90,42 @@ const createOrderConfirmationEmail = (order, customerEmail) => {
   }).join('');
 
   // Calculate amounts safely
-  const subtotal = order.subtotal || order.totalPrice || 0;
-  const deliveryFee = order.deliveryFee || 85;
+  // Get deliveryFee first
+  let deliveryFee = order.deliveryFee || 0;
+  // If deliveryFee is 85 (old value), treat it as 0 to hide it from email
+  if (deliveryFee === 85) {
+    deliveryFee = 0;
+  }
+  
+  // Calculate subtotal correctly: if subtotal is not provided, calculate it from totalPrice
+  let subtotal = order.subtotal;
+  if (!subtotal && order.totalPrice) {
+    // If subtotal is not provided, calculate it by subtracting deliveryFee from totalPrice
+    subtotal = order.totalPrice - deliveryFee;
+  }
+  if (!subtotal) {
+    subtotal = 0;
+  }
+  
   const pointsUsed = order.pointsUsed || 0;
-  const totalPrice = order.totalPrice || order.finalAmount || subtotal;
-  const totalPaid = totalPrice + deliveryFee - pointsUsed;
+  const pointsDiscount = order.pointsDiscount || (pointsUsed * 10); // Convert points to EGP (1 point = 10 EGP)
+  
+  // If finalAmount is provided, use it directly (it's already the amount after points discount)
+  // Otherwise, calculate: subtotal + deliveryFee - pointsDiscount
+  let totalPaid;
+  if (order.finalAmount !== undefined && order.finalAmount !== null) {
+    // finalAmount is the actual amount paid (after points discount if used)
+    totalPaid = order.finalAmount;
+  } else {
+    // Calculate total paid: subtotal + deliveryFee - pointsDiscount
+    const totalBeforeDiscount = subtotal + deliveryFee;
+    totalPaid = totalBeforeDiscount - pointsDiscount;
+  }
+  
+  // Ensure totalPaid is never negative
+  if (totalPaid < 0) {
+    totalPaid = 0;
+  }
 
   return {
     from: `"LUZA'S CULTURE" <${process.env.EMAIL_USER || 'orders@luzasculture.org'}>`,
@@ -418,14 +449,16 @@ const createOrderConfirmationEmail = (order, customerEmail) => {
                   <span class="total-label">Subtotal</span>
                   <span class="total-value">${subtotal} EGP</span>
                 </div>
-                <div class="total-row">
-                  <span class="total-label">Delivery Fee</span>
-                  <span class="total-value">${deliveryFee} EGP</span>
-                </div>
+                ${deliveryFee > 0 ? `
+                  <div class="total-row">
+                    <span class="total-label">Delivery Fee</span>
+                    <span class="total-value">${deliveryFee} EGP</span>
+                  </div>
+                ` : ''}
                 ${pointsUsed > 0 ? `
                   <div class="total-row">
-                    <span class="total-label">Points Used</span>
-                    <span class="total-value">-${pointsUsed} points</span>
+                    <span class="total-label">Points Used (${pointsUsed} points)</span>
+                    <span class="total-value">-${pointsDiscount} EGP</span>
                   </div>
                 ` : ''}
                 <div class="total-row grand-total">
@@ -628,12 +661,42 @@ const createStoreOwnerNotificationEmail = (order) => {
   };
 
   // Calculate amounts safely
-  const subtotal = order.subtotal || order.totalPrice || 0;
-  const deliveryFee = order.deliveryFee || 85;
+  // Get deliveryFee first
+  let deliveryFee = order.deliveryFee || 0;
+  // If deliveryFee is 85 (old value), treat it as 0 to hide it from email
+  if (deliveryFee === 85) {
+    deliveryFee = 0;
+  }
+  
+  // Calculate subtotal correctly: if subtotal is not provided, calculate it from totalPrice
+  let subtotal = order.subtotal;
+  if (!subtotal && order.totalPrice) {
+    // If subtotal is not provided, calculate it by subtracting deliveryFee from totalPrice
+    subtotal = order.totalPrice - deliveryFee;
+  }
+  if (!subtotal) {
+    subtotal = 0;
+  }
+  
   const pointsUsed = order.pointsUsed || 0;
-  const pointsDiscount = order.pointsDiscount || 0;
-  const totalPrice = order.totalPrice || order.finalAmount || subtotal;
-  const finalAmount = order.finalAmount || (totalPrice + deliveryFee - pointsUsed);
+  const pointsDiscount = order.pointsDiscount || (pointsUsed * 10); // Convert points to EGP (1 point = 10 EGP)
+  
+  // If finalAmount is provided, use it directly (it's already the amount after points discount)
+  // Otherwise, calculate: subtotal + deliveryFee - pointsDiscount
+  let finalAmount;
+  if (order.finalAmount !== undefined && order.finalAmount !== null) {
+    // finalAmount is the actual amount paid (after points discount if used)
+    finalAmount = order.finalAmount;
+  } else {
+    // Calculate final amount: subtotal + deliveryFee - pointsDiscount
+    const totalBeforeDiscount = subtotal + deliveryFee;
+    finalAmount = totalBeforeDiscount - pointsDiscount;
+  }
+  
+  // Ensure finalAmount is never negative
+  if (finalAmount < 0) {
+    finalAmount = 0;
+  }
 
   // Format order items
   const orderItemsList = (order.orderItems || []).map(item => {
@@ -941,8 +1004,8 @@ const createStoreOwnerNotificationEmail = (order) => {
                 ` : ''}
                 ${pointsUsed > 0 ? `
                   <div class="total-row">
-                    <span class="total-label">Points Used</span>
-                    <span class="total-value">-${pointsUsed} points</span>
+                    <span class="total-label">Points Used (${pointsUsed} points)</span>
+                    <span class="total-value">-${pointsDiscount} EGP</span>
                   </div>
                 ` : ''}
                 <div class="total-row grand-total">

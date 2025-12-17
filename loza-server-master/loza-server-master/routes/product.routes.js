@@ -8,6 +8,7 @@ import {
   deleteProduct,
   searchProducts,
   getBestsellingProducts,
+  addProductRating,
 } from "../controllers/product.controller.js";
 import { authorizeRoles } from "../middlewares/auth/authorizeRoles.js";
 import { isAuthenticated } from "../middlewares/auth/isAuthenticated.js";
@@ -44,5 +45,7 @@ productRouter.delete(
   authorizeRoles("admin"),
   deleteProduct
 );
+
+productRouter.post("/add-rating/:id", addProductRating);
 
 export default productRouter;

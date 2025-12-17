@@ -44,8 +44,15 @@ REPO_URL="${REPO_URL:-https://github.com/MahmouT1/luzaend2.git}"
 REPO_BRANCH="${REPO_BRANCH:-main}"
 REPO_DIR="${REPO_DIR:-$APP_DIR/loza-client-master}"  # نفس المسار اللي كان شغال قبل
 
-CLIENT_DIR_REL="loza-client-master/loza-client-master"
-SERVER_DIR_REL="loza-server-master/loza-server-master"
+#
+# Project layout varies a bit between deployments (nested folders).
+# We'll auto-detect actual client/server directories after clone/pull.
+#
+CLIENT_DIR_REL_DEFAULT="loza-client-master/loza-client-master"
+SERVER_DIR_REL_DEFAULT="loza-server-master/loza-server-master"
+# Resolved later
+CLIENT_DIR_REL=""
+SERVER_DIR_REL=""
 
 # Ports
 CLIENT_PORT="${CLIENT_PORT:-3000}"
@@ -185,17 +192,77 @@ else
 fi
 success "Repository ready"
 
-CLIENT_DIR="$REPO_DIR/$CLIENT_DIR_REL"
-SERVER_DIR="$REPO_DIR/$SERVER_DIR_REL"
+detect_client_dir() {
+  local base="$1"
+  local candidates=(
+    "$base/$CLIENT_DIR_REL_DEFAULT"
+    "$base/loza-client-master"
+    "$base/loza-client-master/loza-client-master"
+    "$base"
+  )
+  for c in "${candidates[@]}"; do
+    if [ -f "$c/package.json" ] && grep -q "\"next\"" "$c/package.json" 2>/dev/null; then
+      echo "$c"
+      return 0
+    fi
+  done
+  # Fallback: first package.json that looks like Next.js app
+  local found
+  found="$(find "$base" -maxdepth 4 -name package.json -type f 2>/dev/null | head -50 | while read -r p; do
+    if grep -q "\"next\"" "$p" 2>/dev/null; then
+      dirname "$p"
+      break
+    fi
+  done)"
+  if [ -n "$found" ]; then
+    echo "$found"
+    return 0
+  fi
+  return 1
+}
 
-if [ ! -f "$CLIENT_DIR/package.json" ]; then
-  error "Client package.json not found at: $CLIENT_DIR"
+detect_server_dir() {
+  local base="$1"
+  local candidates=(
+    "$base/$SERVER_DIR_REL_DEFAULT"
+    "$base/loza-server-master/loza-server-master"
+    "$base/loza-server-master"
+    "$base"
+  )
+  for c in "${candidates[@]}"; do
+    if [ -f "$c/server.js" ]; then
+      echo "$c"
+      return 0
+    fi
+  done
+  # Fallback: find server.js
+  local found
+  found="$(find "$base" -maxdepth 5 -name server.js -type f 2>/dev/null | head -1 || true)"
+  if [ -n "$found" ]; then
+    dirname "$found"
+    return 0
+  fi
+  return 1
+}
+
+CLIENT_DIR="$(detect_client_dir "$REPO_DIR" || true)"
+SERVER_DIR="$(detect_server_dir "$REPO_DIR" || true)"
+
+if [ -z "$CLIENT_DIR" ] || [ ! -f "$CLIENT_DIR/package.json" ]; then
+  error "Client package.json not found (auto-detect failed)."
+  info "Searched under: $REPO_DIR"
+  info "Try: find $REPO_DIR -maxdepth 4 -name package.json"
   exit 1
 fi
-if [ ! -f "$SERVER_DIR/server.js" ]; then
-  error "Server entry not found (server.js) at: $SERVER_DIR"
+if [ -z "$SERVER_DIR" ] || [ ! -f "$SERVER_DIR/server.js" ]; then
+  error "Server entry (server.js) not found (auto-detect failed)."
+  info "Searched under: $REPO_DIR"
+  info "Try: find $REPO_DIR -maxdepth 5 -name server.js"
   exit 1
 fi
+
+success "Detected client dir: $CLIENT_DIR"
+success "Detected server dir: $SERVER_DIR"
 
 ###############################################################################
 # 6) Create env files safely (prompt or env vars)

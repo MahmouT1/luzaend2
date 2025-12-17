@@ -264,7 +264,8 @@ export const createOrder = async (req, res) => {
         console.log("Item productId:", item.productId);
         console.log("User nickname:", userInfo.nickname);
         
-        if (item.productId && userInfo.nickname) {
+        // Only add to recent purchases if nickname is explicitly provided (not fallback)
+        if (item.productId && userInfo.nickname && userInfo.nickname.trim()) {
           console.log("Adding purchase to product:", item.productId);
           
                 // Get address from shipping address

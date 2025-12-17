@@ -75,7 +75,7 @@ export default function SearchDropdown({ isOpen, onClose }: SearchDropdownProps)
   return (
     <div 
       ref={dropdownRef}
-      className="absolute top-full right-0 mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+      className="absolute top-full right-0 mt-2 w-[90vw] sm:w-96 max-w-[500px] bg-white border border-gray-200 rounded-lg shadow-lg z-50"
     >
       {/* Search Input */}
       <div className="flex items-center border-b border-gray-200 px-4 py-3">

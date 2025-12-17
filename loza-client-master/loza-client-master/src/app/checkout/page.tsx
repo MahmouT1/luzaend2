@@ -250,12 +250,14 @@ export default function CheckoutPage() {
     const finalRemainingAmount = usePoints ? Math.max(0, total - finalPointsDiscount) : total;
     
     // Build userInfo object - only include userId if user is logged in
+    // Only include nickname if user explicitly provided one (not fallback to name)
     const userInfoData: any = {
       firstName: form.fullName.split(" ")[0] || "",
       lastName: form.fullName.split(" ").slice(1).join(" ") || "N/A",
       phone: form.phone || "",
       email: form.email,
-      nickname: form.nickname || (currentUser?.name || form.fullName || "")
+      // Only send nickname if user explicitly entered one (not empty/whitespace)
+      nickname: form.nickname && form.nickname.trim() ? form.nickname.trim() : undefined
     };
     
     // Only include userId if user is logged in

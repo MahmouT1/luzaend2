@@ -423,3 +423,74 @@ export const getBestsellingProducts = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
+// ADD PRODUCT RATING
+export const addProductRating = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating, review, userName, userId } = req.body;
+
+    // Validation
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
+    }
+
+    if (!userName || !userName.trim()) {
+      return res.status(400).json({ message: "User name is required" });
+    }
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Check if user already rated this product (if userId provided)
+    if (userId) {
+      const existingRating = product.ratings.find(
+        (r) => r.userId && r.userId.toString() === userId.toString()
+      );
+      if (existingRating) {
+        // Update existing rating
+        existingRating.rating = rating;
+        existingRating.review = review || "";
+        existingRating.userName = userName.trim();
+      } else {
+        // Add new rating
+        product.ratings.push({
+          userId: userId,
+          userName: userName.trim(),
+          rating: rating,
+          review: review || "",
+        });
+      }
+    } else {
+      // Guest rating (no userId)
+      product.ratings.push({
+        userName: userName.trim(),
+        rating: rating,
+        review: review || "",
+      });
+    }
+
+    // Calculate average rating
+    const totalRatings = product.ratings.length;
+    const sumRatings = product.ratings.reduce((sum, r) => sum + r.rating, 0);
+    product.averageRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
+    product.totalRatings = totalRatings;
+
+    await product.save();
+
+    res.status(200).json({
+      message: "Rating added successfully",
+      product: {
+        _id: product._id,
+        averageRating: product.averageRating,
+        totalRatings: product.totalRatings,
+        ratings: product.ratings,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Product controller error (addProductRating):", error.message);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+};

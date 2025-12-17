@@ -25,12 +25,17 @@ export default function RecentBuyersPanel({ recentPurchases, productName }: Rece
     setMounted(true);
   }, []);
 
-  if (!mounted || !recentPurchases || recentPurchases.length === 0) {
+  // Filter out purchases without nickname
+  const purchasesWithNickname = recentPurchases?.filter(
+    (purchase) => purchase.nickname && purchase.nickname.trim()
+  ) || [];
+
+  if (!mounted || !purchasesWithNickname || purchasesWithNickname.length === 0) {
     return null;
   }
 
   // Sort by purchase date (oldest first) to show chronological order of purchases
-  const sortedPurchases = [...recentPurchases]
+  const sortedPurchases = [...purchasesWithNickname]
     .sort((a, b) => new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime())
     .slice(0, 5);
 
