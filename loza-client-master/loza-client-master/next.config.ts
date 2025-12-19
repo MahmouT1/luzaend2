@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
+  // swcMinify: true, // غير معروف في Next.js 15 - تم إزالته
   // تعطيل output standalone لتوفير الذاكرة
   // output: 'standalone',
   compiler: {
