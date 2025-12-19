@@ -112,6 +112,15 @@ const nextConfig: NextConfig = {
   experimental: {
     // تعطيل الميزات التي تستهلك ذاكرة كبيرة
     optimizePackageImports: ['lucide-react', 'react-icons'],
+    // تقليل استخدام الذاكرة أثناء البناء
+    memoryBasedWorkersCount: false,
+  },
+  // تقليل استخدام الذاكرة في webpack (إعدادات إضافية)
+  onDemandEntries: {
+    // فترة بقاء الصفحات في الذاكرة (بالثواني)
+    maxInactiveAge: 60 * 1000,
+    // عدد الصفحات المحفوظة في الذاكرة
+    pagesBufferLength: 5,
   },
 };
 
