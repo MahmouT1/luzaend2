@@ -44,6 +44,9 @@ export const metadata = {
     initialScale: 1,
     maximumScale: 5,
   },
+  other: {
+    'dns-prefetch': 'https://res.cloudinary.com',
+  },
 };
 
 export default function RootLayout({ children }) {

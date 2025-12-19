@@ -47,7 +47,7 @@ const ProductCard = ({
                 }`}
                 loading={index < 8 ? "eager" : "lazy"}
                 priority={index < 4}
-                quality={85}
+                quality={75}
                 onError={(e) => {
                   console.log('Image failed to load:', e.currentTarget.src);
                   e.currentTarget.src = '/placeholder-image.svg';
@@ -66,7 +66,7 @@ const ProductCard = ({
                     isHovered ? 'opacity-100' : 'opacity-0'
                   }`}
                   loading="lazy"
-                  quality={85}
+                  quality={75}
                   onError={(e) => {
                     console.log('Second image failed to load:', e.currentTarget.src);
                     e.currentTarget.src = '/placeholder-image.svg';

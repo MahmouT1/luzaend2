@@ -51,7 +51,7 @@ export default function BestsellersPage() {
               } ${isScheduled ? 'opacity-50' : ''}`}
               loading={index < 8 ? "eager" : "lazy"}
               priority={index < 4}
-              quality={85}
+              quality={75}
               onError={(e) => {
                 e.currentTarget.src = '/placeholder-image.svg';
               }}
@@ -69,7 +69,7 @@ export default function BestsellersPage() {
                   isHovered ? 'opacity-100' : 'opacity-0'
                 } ${isScheduled ? 'opacity-50' : ''}`}
                 loading="lazy"
-                quality={85}
+                quality={75}
                 onError={(e) => {
                   e.currentTarget.src = '/placeholder-image.svg';
                 }}
