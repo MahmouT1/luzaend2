@@ -1,11 +1,27 @@
 import NextAuth, { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+// Debug: Log environment variables
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+const nextAuthUrl = process.env.NEXTAUTH_URL;
+
+console.log("🔐 NextAuth Environment Variables Check:");
+console.log("GOOGLE_CLIENT_ID:", googleClientId ? `${googleClientId.substring(0, 20)}...` : "NOT FOUND");
+console.log("GOOGLE_CLIENT_SECRET:", googleClientSecret ? `${googleClientSecret.substring(0, 10)}...` : "NOT FOUND");
+console.log("NEXTAUTH_SECRET:", nextAuthSecret ? "FOUND" : "NOT FOUND");
+console.log("NEXTAUTH_URL:", nextAuthUrl || "NOT FOUND");
+
+if (!googleClientId || !googleClientSecret) {
+  console.error("❌ CRITICAL: Google OAuth credentials are missing!");
+}
+
 const authOptions: AuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "dummy-client-id",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "dummy-client-secret",
+      clientId: googleClientId || "dummy-client-id",
+      clientSecret: googleClientSecret || "dummy-client-secret",
       authorization: {
         params: {
           prompt: "select_account",
@@ -13,7 +29,7 @@ const authOptions: AuthOptions = {
       },
     }),
   ],
-  secret: process.env.NEXTAUTH_SECRET || "fallback-secret",
+  secret: nextAuthSecret || "fallback-secret",
   // Ensure proper URL and cookies for mobile
   useSecureCookies: process.env.NEXTAUTH_URL?.startsWith('https://') ?? true,
   callbacks: {
