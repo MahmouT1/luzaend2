@@ -69,8 +69,24 @@ const nextConfig: NextConfig = {
     if (dev) {
       config.watchOptions = {
         ...config.watchOptions,
-        ignored: ['**/node_modules', '**/.git', '**/.next'],
+        ignored: ['**/node_modules', '**/.git', '**/.next', '**/loza-server-master/**'],
       };
+    }
+
+    // استبعاد loza-server-master من البناء
+    config.resolve = {
+      ...config.resolve,
+      alias: {
+        ...config.resolve.alias,
+      },
+    };
+    
+    // تجاهل ملفات loza-server-master
+    if (config.module && config.module.rules) {
+      config.module.rules.push({
+        test: /loza-server-master/,
+        use: 'ignore-loader',
+      });
     }
 
     // Ignore fs module in client-side code

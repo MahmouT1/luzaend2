@@ -42,6 +42,7 @@
     "node_modules",
     "**/admin-login/**",
     "**/admin-test/**",
-    ".next/**"
+    ".next/**",
+    "**/loza-server-master/**"
   ]
 }
