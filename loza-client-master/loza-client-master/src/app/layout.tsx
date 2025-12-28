@@ -53,7 +53,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${inter.variable} ${mulish.variable} antialiased`}
+      >
         {/* Meta Pixel Code */}
         <Script
           id="meta-pixel"
@@ -73,10 +75,6 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
-      </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${inter.variable} ${mulish.variable} antialiased`}
-      >
         {/* Meta Pixel Noscript */}
         <noscript>
           <img
