@@ -528,10 +528,8 @@ export default function AnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, totalSales }) => {
-                      const percentage = finalTopProducts.reduce((sum: number, p: any) => sum + (p.totalSales || 0), 0);
-                      const percent = percentage > 0 ? ((totalSales / percentage) * 100).toFixed(1) : 0;
-                      return `${name}: ${percent}%`;
+                    label={({ name, value, percent }) => {
+                      return `${name}: ${(percent * 100).toFixed(1)}%`;
                     }}
                     outerRadius={120}
                     fill="#8884d8"
