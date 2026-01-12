@@ -31,11 +31,13 @@ const port = process.env.PORT || 8000;
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
-// Add request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
+// Add request logging middleware (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
+  });
+}
 // CORS configuration - allow both main domain and admin subdomain
 const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:3000',
@@ -117,9 +119,11 @@ const server = app.listen(port, '0.0.0.0', async () => {
     console.error("❌ Error in initial auto-unlock:", error);
   }
   
-  // Set up periodic auto-unlock (every 5 minutes)
+  // Set up periodic auto-unlock (every 15 minutes to reduce CPU usage)
   setInterval(async () => {
-    console.log("🕐 Running scheduled auto-unlock check...");
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("🕐 Running scheduled auto-unlock check...");
+    }
     try {
       const result = await checkAndUnlockProducts();
       if (result.unlocked > 0) {
@@ -128,9 +132,9 @@ const server = app.listen(port, '0.0.0.0', async () => {
     } catch (error) {
       console.error("❌ Error in scheduled auto-unlock:", error);
     }
-  }, 5 * 60 * 1000); // Run every 5 minutes (5 minutes * 60 seconds * 1000 milliseconds)
+  }, 15 * 60 * 1000); // Run every 15 minutes (reduced from 5 to reduce CPU usage)
   
-  console.log("⏰ Auto-unlock system initialized (checking every 5 minutes)");
+  console.log("⏰ Auto-unlock system initialized (checking every 15 minutes)");
 });
 
 server.on('error', (error) => {
